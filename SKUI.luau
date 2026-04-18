@@ -1,67 +1,8 @@
 --[[
 ╔══════════════════════════════════════════════════════════╗
-║              ftgs UI Library  v2.0                       ║
+║              ftgs UI Library  v2.1 (FIXED)               ║
 ║   Infinite Tabs · Infinite Elements · Fixed Slider       ║
 ║   ScrollFrame V2 · Draggable · Dropdown Popup            ║
-╠══════════════════════════════════════════════════════════╣
-║  USAGE:                                                  ║
-║                                                          ║
-║  local UI = loadstring(game:HttpGet("RAW_URL"))()        ║
-║                                                          ║
-║  local Window = UI:CreateWindow({                        ║
-║      Title  = "My Super Hub",                            ║
-║      Author = "by .ftgs and .ftgs",                      ║
-║  })                                                      ║
-║                                                          ║
-║  local MinBtn = Window:CreateMinimizeBtn({               ║
-║      Title = "Open UI",                                  ║
-║      Color = "Purple", -- Red|Green|Blue|Purple|         ║
-║  })                    --   Yellow|Orange                 ║
-║                                                          ║
-║  -- Infinite tabs                                        ║
-║  local Tab1 = Window:Tab({ Title = "Home" })             ║
-║  local Tab2 = Window:Tab({ Title = "Settings" })         ║
-║  local Tab3 = Window:Tab({ Title = "Locked",             ║
-║                            Locked = true })              ║
-║                                                          ║
-║  -- Infinite elements per tab                            ║
-║  Tab1:Section("Category")                                ║
-║                                                          ║
-║  local Btn = Tab1:Button({                               ║
-║      Title    = "Click Me",  Desc   = "Does something",  ║
-║      Locked   = false,                                   ║
-║      Callback = function() print("clicked") end,         ║
-║  })                                                      ║
-║                                                          ║
-║  local DD = Tab1:Dropdown({                              ║
-║      Title    = "Pick",      Desc   = "Choose option",   ║
-║      Values   = {"A","B","C"}, Value = "A",              ║
-║      Callback = function(v) print(v) end,                ║
-║  })                                                      ║
-║  DD:SetValue("B")  |  DD:GetValue()                      ║
-║                                                          ║
-║  local Tog = Tab1:Toggle({                               ║
-║      Title    = "Toggle",    Desc   = "On/Off",          ║
-║      Value    = false,                                   ║
-║      Callback = function(s) print(s) end,                ║
-║  })                                                      ║
-║  Tog:SetValue(true)  |  Tog:GetValue()                   ║
-║                                                          ║
-║  local Sld = Tab1:Slider({                               ║
-║      Title    = "Speed",     Desc   = "Drag me",         ║
-║      Step     = 1,  -- float ok: Step = 0.1              ║
-║      Value    = { Min=0, Max=100, Default=50 },          ║
-║      Callback = function(v) print(v) end,                ║
-║  })                                                      ║
-║  Sld:SetValue(75)  |  Sld:GetValue()                     ║
-║                                                          ║
-║  local Inp = Tab1:Input({                                ║
-║      Title       = "Name",   Desc   = "Your name",       ║
-║      Value       = "",       Placeholder = "Type...",    ║
-║      Type        = "Input",  -- or "Textarea"            ║
-║      Callback    = function(t) print(t) end,             ║
-║  })                                                      ║
-║  Inp:SetValue("hi")  |  Inp:GetValue()                   ║
 ╚══════════════════════════════════════════════════════════╝
 --]]
 
@@ -110,9 +51,13 @@ local function MakeDraggable(frame, handle)
             dragging   = true
             startMouse = i.Position
             startPos   = frame.Position
-            i.Changed:Connect(function()
+            
+            -- Fix: Disconnect event to prevent memory leak
+            local con
+            con = i.Changed:Connect(function()
                 if i.UserInputState == Enum.UserInputState.End then
                     dragging = false
+                    if con then con:Disconnect() end
                 end
             end)
         end
@@ -175,10 +120,7 @@ if not ok or not ScreenGui.Parent then
 end
 
 -- ═══════════════════════════════════════════════
---  SCROLL-V2 FACTORY
---  Returns { Wrapper, Scroll, Layout }
---  Content goes inside Scroll.
---  Canvas auto-expands whenever Layout changes.
+--  SCROLL-V2 FACTORY (FIXED FOR INFINITE TABS)
 -- ═══════════════════════════════════════════════
 local function ScrollV2(parent, size, position, pad)
     pad = pad or { top=6, bottom=12, left=4, right=6 }
@@ -199,6 +141,8 @@ local function ScrollV2(parent, size, position, pad)
     SF.ScrollBarImageColor3  = T.Accent
     SF.ScrollingDirection    = Enum.ScrollingDirection.Y
     SF.CanvasSize            = UDim2.new(0, 0, 0, 0)
+    -- Fix: Replaced manual math with native auto size for infinite scrolling
+    SF.AutomaticCanvasSize   = Enum.AutomaticSize.Y 
     SF.ScrollingEnabled      = true
     SF.ElasticBehavior       = Enum.ElasticBehavior.WhenScrollable
     SF.BottomImage           = "rbxasset://textures/ui/Scroll/scroll-middle.png"
@@ -218,23 +162,17 @@ local function ScrollV2(parent, size, position, pad)
     Pad.PaddingRight  = UDim.new(0, pad.right)
     Pad.Parent        = SF
 
-    -- auto canvas resize
-    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        SF.CanvasSize = UDim2.new(0, 0, 0,
-            Layout.AbsoluteContentSize.Y + pad.top + pad.bottom + 4)
-    end)
-
     return { Wrapper = Wrapper, Scroll = SF, Layout = Layout }
 end
 
 -- ═══════════════════════════════════════════════
---  DROPDOWN POPUP  (global singleton)
+--  DROPDOWN POPUP
 -- ═══════════════════════════════════════════════
 local DDOverlay = Instance.new("Frame")
 DDOverlay.Name                   = "DDOverlay"
 DDOverlay.Size                   = UDim2.fromScale(1, 1)
 DDOverlay.BackgroundColor3       = Color3.fromRGB(0,0,0)
-DDOverlay.BackgroundTransparency = 0.5
+DDOverlay.BackgroundTransparency = 1
 DDOverlay.BorderSizePixel        = 0
 DDOverlay.ZIndex                 = 300
 DDOverlay.Visible                = false
@@ -253,7 +191,6 @@ DDPopup.Parent           = DDOverlay
 Corner(DDPopup, 14)
 NewStroke(DDPopup, T.BorderHi, 1)
 
--- popup header
 local DDHeader = Instance.new("Frame")
 DDHeader.Size            = UDim2.new(1, 0, 0, 44)
 DDHeader.BackgroundColor3= T.Tertiary
@@ -304,7 +241,6 @@ DDCloseBtn.ZIndex          = 303
 DDCloseBtn.Parent          = DDHeader
 Corner(DDCloseBtn, 12)
 
--- popup item list — ScrollV2
 local DDScrollV2 = ScrollV2(
     DDPopup,
     UDim2.new(1, -8, 1, -52),
@@ -334,7 +270,6 @@ DDOverlay.InputBegan:Connect(function(i)
 end)
 
 local function OpenDropdown(title, values, currentVal, onSelect)
-    -- clear old items
     for _, c in ipairs(DDScrollV2.Scroll:GetChildren()) do
         if c:IsA("TextButton") then c:Destroy() end
     end
@@ -371,18 +306,12 @@ local function OpenDropdown(title, values, currentVal, onSelect)
 
         item.MouseEnter:Connect(function()
             if val ~= active then
-                Tween(item, TweenInfo.new(0.1), {
-                    BackgroundColor3 = T.BorderHi,
-                    TextColor3       = T.Text,
-                })
+                Tween(item, TweenInfo.new(0.1), { BackgroundColor3 = T.BorderHi, TextColor3 = T.Text })
             end
         end)
         item.MouseLeave:Connect(function()
             if val ~= active then
-                Tween(item, TweenInfo.new(0.1), {
-                    BackgroundColor3 = T.Tertiary,
-                    TextColor3       = T.SubText,
-                })
+                Tween(item, TweenInfo.new(0.1), { BackgroundColor3 = T.Tertiary, TextColor3 = T.SubText })
             end
         end)
         item.MouseButton1Click:Connect(function()
@@ -417,10 +346,8 @@ local function OpenDropdown(title, values, currentVal, onSelect)
 
     local count   = #values
     local targetH = math.min(count * 42 + 56, 320)
-    DDScrollV2.Scroll.CanvasSize = UDim2.new(0, 0, 0, count * 42 + 10)
 
     DDPopup.Size = UDim2.new(0, 284, 0, 0)
-    DDOverlay.BackgroundTransparency = 1
     DDOverlay.Visible = true
     Tween(DDOverlay, TweenInfo.new(0.2), { BackgroundTransparency = 0.5 })
     Tween(DDPopup,
@@ -440,12 +367,9 @@ function Library:CreateWindow(config)
     local winTitle  = config.Title  or "Hub"
     local winAuthor = config.Author or ""
 
-    -- ─────────────────────────────────────────
-    --  MAIN FRAME
-    -- ─────────────────────────────────────────
     local Main = Instance.new("Frame")
     Main.Name             = "MainWindow"
-    Main.Size             = UDim2.new(0, 550, 0, 340)
+    Main.Size             = UDim2.new(0, 560, 0, 350)
     Main.Position         = UDim2.new(0.5, -297, 0.5, -217)
     Main.BackgroundColor3 = T.Bg
     Main.BorderSizePixel  = 0
@@ -454,7 +378,6 @@ function Library:CreateWindow(config)
     Corner(Main, 14)
     NewStroke(Main, T.Border, 1)
 
-    -- drop shadow
     local Shad = Instance.new("ImageLabel")
     Shad.Size                  = UDim2.new(1, 70, 1, 70)
     Shad.Position              = UDim2.new(0, -35, 0, -35)
@@ -467,9 +390,6 @@ function Library:CreateWindow(config)
     Shad.ZIndex                = -1
     Shad.Parent                = Main
 
-    -- ─────────────────────────────────────────
-    --  TITLE BAR
-    -- ─────────────────────────────────────────
     local TBar = Instance.new("Frame")
     TBar.Size            = UDim2.new(1, 0, 0, 46)
     TBar.BackgroundColor3= T.Secondary
@@ -477,7 +397,6 @@ function Library:CreateWindow(config)
     TBar.Parent          = Main
     Corner(TBar, 14)
 
-    -- fill the bottom rounded corners of TBar
     local TBarFix = Instance.new("Frame")
     TBarFix.Size            = UDim2.new(1, 0, 0, 14)
     TBarFix.Position        = UDim2.new(0, 0, 1, -14)
@@ -517,7 +436,6 @@ function Library:CreateWindow(config)
         AuthLbl.Parent                = TBar
     end
 
-    -- title bar minimize btn
     local TBarMini = Instance.new("TextButton")
     TBarMini.Size            = UDim2.new(0, 26, 0, 26)
     TBarMini.Position        = UDim2.new(1, -68, 0.5, -13)
@@ -544,9 +462,6 @@ function Library:CreateWindow(config)
 
     MakeDraggable(Main, TBar)
 
-    -- ─────────────────────────────────────────
-    --  SIDEBAR — uses ScrollV2 for INFINITE tabs
-    -- ─────────────────────────────────────────
     local SideFrame = Instance.new("Frame")
     SideFrame.Name            = "Sidebar"
     SideFrame.Size            = UDim2.new(0, 140, 1, -46)
@@ -555,17 +470,15 @@ function Library:CreateWindow(config)
     SideFrame.BorderSizePixel = 0
     SideFrame.Parent          = Main
 
-    -- ScrollV2 for sidebar tabs
     local SideV2 = ScrollV2(
         SideFrame,
         UDim2.fromScale(1, 1),
         UDim2.fromScale(0, 0),
         { top = 8, bottom = 10, left = 8, right = 8 }
     )
-    SideV2.Scroll.ScrollBarThickness = 0  -- hidden; sidebar auto-scrolls
+    SideV2.Scroll.ScrollBarThickness = 0
     SideV2.Layout.Padding            = UDim.new(0, 4)
 
-    -- divider
     local SideDiv = Instance.new("Frame")
     SideDiv.Size            = UDim2.new(0, 1, 1, -46)
     SideDiv.Position        = UDim2.new(0, 140, 0, 46)
@@ -573,9 +486,6 @@ function Library:CreateWindow(config)
     SideDiv.BorderSizePixel = 0
     SideDiv.Parent          = Main
 
-    -- ─────────────────────────────────────────
-    --  CONTENT AREA
-    -- ─────────────────────────────────────────
     local ContentArea = Instance.new("Frame")
     ContentArea.Name                  = "ContentArea"
     ContentArea.Size                  = UDim2.new(1, -150, 1, -54)
@@ -584,59 +494,42 @@ function Library:CreateWindow(config)
     ContentArea.BorderSizePixel       = 0
     ContentArea.Parent                = Main
 
-    -- ─────────────────────────────────────────
-    --  MINIMIZE / CLOSE
-    -- ─────────────────────────────────────────
     local FULL_H    = 434
     local minimized = false
 
     TBarMini.MouseButton1Click:Connect(function()
         minimized = not minimized
         if minimized then
-            Tween(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quad),
-                { Size = UDim2.new(0, 594, 0, 46) })
+            Tween(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 594, 0, 46) })
         else
-            Tween(Main, TweenInfo.new(0.28, Enum.EasingStyle.Back),
-                { Size = UDim2.new(0, 594, 0, FULL_H) })
+            Tween(Main, TweenInfo.new(0.28, Enum.EasingStyle.Back), { Size = UDim2.new(0, 594, 0, FULL_H) })
         end
     end)
 
     CloseBtn.MouseButton1Click:Connect(function()
-        Tween(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad),
-            { Size = UDim2.new(0, 594, 0, 0) })
+        Tween(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 594, 0, 0) })
         task.delay(0.22, function() Main.Visible = false end)
     end)
 
-    -- ─────────────────────────────────────────
-    --  TAB SYSTEM
-    -- ─────────────────────────────────────────
-    local tabs      = {}  -- { Btn, Wrapper, Scroll }
+    local tabs      = {}
     local activeTab = nil
 
     local function SetActiveTab(entry)
-        -- hide previous
         if activeTab then
-            Tween(activeTab.Btn, TweenInfo.new(0.15),
-                { BackgroundColor3 = T.Tertiary })
+            Tween(activeTab.Btn, TweenInfo.new(0.15), { BackgroundColor3 = T.Tertiary })
             activeTab.Btn.TextColor3  = T.SubText
             activeTab.Btn.Font        = Enum.Font.Gotham
             activeTab.Wrapper.Visible = false
         end
-        -- show new
         activeTab = entry
-        Tween(entry.Btn, TweenInfo.new(0.15),
-            { BackgroundColor3 = T.Accent })
+        Tween(entry.Btn, TweenInfo.new(0.15), { BackgroundColor3 = T.Accent })
         entry.Btn.TextColor3  = T.Text
         entry.Btn.Font        = Enum.Font.GothamBold
         entry.Wrapper.Visible = true
     end
 
-    -- ══════════════════════════════════════════
-    --   WINDOW OBJECT  (returned to user)
-    -- ══════════════════════════════════════════
     local WindowObj = {}
 
-    -- ── CreateMinimizeBtn ─────────────────────
     function WindowObj:CreateMinimizeBtn(cfg)
         cfg = cfg or {}
         local label    = cfg.Title or "Open UI"
@@ -669,33 +562,41 @@ function Library:CreateWindow(config)
 
         MakeDraggable(FB)
 
+        -- Fix: Replaced MouseButton1Click with Input Ended checking distance dragged.
         local showing = true
-        FB.MouseButton1Click:Connect(function()
-            showing = not showing
-            if showing then
-                Main.Size    = UDim2.new(0, 594, 0, 0)
-                Main.Visible = true
-                minimized    = false
-                Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back),
-                    { Size = UDim2.new(0, 594, 0, FULL_H) })
-                FB.Text = "Hide UI"
-            else
-                Tween(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quad),
-                    { Size = UDim2.new(0, 594, 0, 0) })
-                task.delay(0.2, function()
-                    Main.Visible = false
-                    FB.Text      = label
-                end)
+        local dragStartPos = nil
+
+        FB.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                dragStartPos = i.Position
+            end
+        end)
+
+        FB.InputEnded:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                -- if the user dragged it instead of clicking, do nothing
+                if dragStartPos and (i.Position - dragStartPos).Magnitude > 5 then return end
+                
+                showing = not showing
+                if showing then
+                    Main.Size    = UDim2.new(0, 594, 0, 0)
+                    Main.Visible = true
+                    minimized    = false
+                    Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Size = UDim2.new(0, 594, 0, FULL_H) })
+                    FB.Text = "Hide UI"
+                else
+                    Tween(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Size = UDim2.new(0, 594, 0, 0) })
+                    task.delay(0.2, function()
+                        Main.Visible = false
+                        FB.Text      = label
+                    end)
+                end
             end
         end)
 
         FB.MouseEnter:Connect(function()
             Tween(FB, TweenInfo.new(0.12), {
-                BackgroundColor3 = Color3.new(
-                    math.min(bg.R * 1.18, 1),
-                    math.min(bg.G * 1.18, 1),
-                    math.min(bg.B * 1.18, 1)
-                )
+                BackgroundColor3 = Color3.new( math.min(bg.R * 1.18, 1), math.min(bg.G * 1.18, 1), math.min(bg.B * 1.18, 1) )
             })
         end)
         FB.MouseLeave:Connect(function()
@@ -705,13 +606,11 @@ function Library:CreateWindow(config)
         return FB
     end
 
-    -- ── Tab ──────────────────────────────────
     function WindowObj:Tab(cfg)
         cfg = cfg or {}
         local tabName = cfg.Title  or "Tab"
         local locked  = cfg.Locked or false
 
-        -- sidebar button
         local TabBtn = Instance.new("TextButton")
         TabBtn.Size            = UDim2.new(1, 0, 0, 34)
         TabBtn.BackgroundColor3= T.Tertiary
@@ -724,28 +623,19 @@ function Library:CreateWindow(config)
         TabBtn.Parent          = SideV2.Scroll
         Corner(TabBtn, 8)
 
-        -- each tab content uses its own ScrollV2
         local TabV2 = ScrollV2(
             ContentArea,
             UDim2.fromScale(1, 1),
             UDim2.fromScale(0, 0),
             { top = 4, bottom = 14, left = 4, right = 6 }
         )
-        -- start hidden
         TabV2.Wrapper.Visible = false
 
-        local entry = {
-            Btn     = TabBtn,
-            Wrapper = TabV2.Wrapper,
-            Scroll  = TabV2.Scroll,
-            Layout  = TabV2.Layout,
-        }
+        local entry = { Btn = TabBtn, Wrapper = TabV2.Wrapper, Scroll = TabV2.Scroll, Layout = TabV2.Layout }
         table.insert(tabs, entry)
 
-        -- auto-select first tab
         if #tabs == 1 then SetActiveTab(entry) end
 
-        -- click tab
         TabBtn.MouseButton1Click:Connect(function()
             if not locked then SetActiveTab(entry) end
         end)
@@ -760,15 +650,15 @@ function Library:CreateWindow(config)
             end
         end)
 
-        -- ──────────────────────────────────────
-        --   ELEMENT HELPERS  (local to this tab)
-        -- ──────────────────────────────────────
+        local elemCount = 0 -- Fix: Explicit LayoutOrdering prevents scrambling
         local function NewElem(h)
+            elemCount = elemCount + 1
             local f = Instance.new("Frame")
             f.Size            = UDim2.new(1, 0, 0, h)
             f.BackgroundColor3= T.Elem
             f.BorderSizePixel = 0
-            f.Parent          = TabV2.Scroll   -- goes into this tab's scroll
+            f.LayoutOrder     = elemCount
+            f.Parent          = TabV2.Scroll
             Corner(f, 10)
             return f
         end
@@ -800,12 +690,8 @@ function Library:CreateWindow(config)
             end
         end
 
-        -- ══════════════════════════════════════
-        --   ELEMENT OBJECT  (returned as Tab)
-        -- ══════════════════════════════════════
         local Elem = {}
 
-        -- ── BUTTON ───────────────────────────
         function Elem:Button(cfg)
             cfg = cfg or {}
             local lk = cfg.Locked or false
@@ -825,17 +711,11 @@ function Library:CreateWindow(config)
             Corner(Btn, 8)
 
             if not lk then
-                Btn.MouseEnter:Connect(function()
-                    Tween(Btn, TweenInfo.new(0.12), { BackgroundColor3 = T.AccentHov })
-                end)
-                Btn.MouseLeave:Connect(function()
-                    Tween(Btn, TweenInfo.new(0.12), { BackgroundColor3 = T.Accent })
-                end)
+                Btn.MouseEnter:Connect(function() Tween(Btn, TweenInfo.new(0.12), { BackgroundColor3 = T.AccentHov }) end)
+                Btn.MouseLeave:Connect(function() Tween(Btn, TweenInfo.new(0.12), { BackgroundColor3 = T.Accent }) end)
                 Btn.MouseButton1Click:Connect(function()
                     Tween(Btn, TweenInfo.new(0.07), { BackgroundColor3 = T.Text })
-                    task.delay(0.14, function()
-                        Tween(Btn, TweenInfo.new(0.15), { BackgroundColor3 = T.Accent })
-                    end)
+                    task.delay(0.14, function() Tween(Btn, TweenInfo.new(0.15), { BackgroundColor3 = T.Accent }) end)
                     if cfg.Callback then task.spawn(cfg.Callback) end
                 end)
             end
@@ -849,7 +729,6 @@ function Library:CreateWindow(config)
             }
         end
 
-        -- ── DROPDOWN ─────────────────────────
         function Elem:Dropdown(cfg)
             cfg = cfg or {}
             local vals = cfg.Values or {}
@@ -899,7 +778,6 @@ function Library:CreateWindow(config)
             }
         end
 
-        -- ── TOGGLE ───────────────────────────
         function Elem:Toggle(cfg)
             cfg = cfg or {}
             local state = cfg.Value or false
@@ -917,9 +795,7 @@ function Library:CreateWindow(config)
             local Knob = Instance.new("Frame")
             Knob.Size            = UDim2.new(0, 18, 0, 18)
             Knob.AnchorPoint     = Vector2.new(0, 0.5)
-            Knob.Position        = state
-                and UDim2.new(0, 25, 0.5, 0)
-                or  UDim2.new(0,  3, 0.5, 0)
+            Knob.Position        = state and UDim2.new(0, 25, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
             Knob.BackgroundColor3= T.Text
             Knob.BorderSizePixel = 0
             Knob.ZIndex          = 2
@@ -935,12 +811,8 @@ function Library:CreateWindow(config)
 
             local function ApplyState(v)
                 state = v
-                Tween(Track, TweenInfo.new(0.2),
-                    { BackgroundColor3 = v and T.Accent or T.Border })
-                Tween(Knob,  TweenInfo.new(0.22, Enum.EasingStyle.Back),
-                    { Position = v
-                        and UDim2.new(0, 25, 0.5, 0)
-                        or  UDim2.new(0,  3, 0.5, 0) })
+                Tween(Track, TweenInfo.new(0.2), { BackgroundColor3 = v and T.Accent or T.Border })
+                Tween(Knob,  TweenInfo.new(0.22, Enum.EasingStyle.Back), { Position = v and UDim2.new(0, 25, 0.5, 0) or UDim2.new(0,  3, 0.5, 0) })
             end
 
             Click.MouseButton1Click:Connect(function()
@@ -948,17 +820,9 @@ function Library:CreateWindow(config)
                 if cfg.Callback then task.spawn(cfg.Callback, state) end
             end)
 
-            return {
-                SetValue = ApplyState,
-                GetValue = function() return state end,
-            }
+            return { SetValue = ApplyState, GetValue = function() return state end }
         end
 
-        -- ── SLIDER ───────────────────────────
-        --   Uses RunService.Heartbeat so the
-        --   drag NEVER locks — reads raw mouse
-        --   position every frame while held.
-        -- ─────────────────────────────────────
         function Elem:Slider(cfg)
             cfg = cfg or {}
             local vc  = cfg.Value  or {}
@@ -970,7 +834,6 @@ function Library:CreateWindow(config)
 
             local e = NewElem(72)
 
-            -- title row
             local TL = Instance.new("TextLabel")
             TL.Size                  = UDim2.new(1, -92, 0, 16)
             TL.Position              = UDim2.new(0, 12, 0, 9)
@@ -1006,7 +869,6 @@ function Library:CreateWindow(config)
                 DL.Parent                = e
             end
 
-            -- track
             local TrackBg = Instance.new("Frame")
             TrackBg.Size            = UDim2.new(1, -24, 0, 6)
             TrackBg.Position        = UDim2.new(0, 12, 1, -17)
@@ -1036,7 +898,6 @@ function Library:CreateWindow(config)
             Knob.Parent          = TrackBg
             Corner(Knob, 8)
 
-            -- wide invisible hit area for easy clicking
             local HitBtn = Instance.new("TextButton")
             HitBtn.Size                  = UDim2.new(1, 10, 0, 32)
             HitBtn.Position              = UDim2.new(0, -5, 0.5, -16)
@@ -1045,19 +906,13 @@ function Library:CreateWindow(config)
             HitBtn.ZIndex                = 4
             HitBtn.Parent                = TrackBg
 
-            -- ── snap helper ─────────────────────
             local function Snap(raw)
                 local v
-                if stp >= 1 then
-                    v = math.round(raw / stp) * stp
-                else
-                    local f = 1 / stp
-                    v = math.round(raw * f) / f
-                end
+                if stp >= 1 then v = math.round(raw / stp) * stp
+                else local f = 1 / stp; v = math.round(raw * f) / f end
                 return math.clamp(v, mn, mx)
             end
 
-            -- ── apply value to visuals ───────────
             local function ApplySlider(v)
                 cur = v
                 local pct     = (cur - mn) / (mx - mn)
@@ -1066,7 +921,6 @@ function Library:CreateWindow(config)
                 VL.Text       = tostring(cur)
             end
 
-            -- ── convert mouseX → snapped value ──
             local function MouseToVal(mouseX)
                 local tx  = TrackBg.AbsolutePosition.X
                 local tw  = TrackBg.AbsoluteSize.X
@@ -1075,9 +929,8 @@ function Library:CreateWindow(config)
                 return Snap(mn + (mx - mn) * pct)
             end
 
-            -- ── drag state (unique per slider) ──
             local isDragging = false
-            local hbConn     = nil   -- RunService.Heartbeat connection
+            local hbConn     = nil
 
             local function StartDrag()
                 isDragging = true
@@ -1106,7 +959,6 @@ function Library:CreateWindow(config)
                 if hbConn then hbConn:Disconnect(); hbConn = nil end
             end
 
-            -- click to jump + start drag
             HitBtn.MouseButton1Down:Connect(function()
                 local mp = UserInputService:GetMouseLocation()
                 ApplySlider(MouseToVal(mp.X))
@@ -1114,32 +966,20 @@ function Library:CreateWindow(config)
                 StartDrag()
             end)
 
-            -- stop drag on mouse up anywhere on screen
             UserInputService.InputEnded:Connect(function(i)
-                if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                    StopDrag()
-                end
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then StopDrag() end
             end)
 
-            -- knob hover glow
             TrackBg.MouseEnter:Connect(function()
-                if not isDragging then
-                    Tween(Knob, TweenInfo.new(0.12), { BackgroundColor3 = T.AccentHov })
-                end
+                if not isDragging then Tween(Knob, TweenInfo.new(0.12), { BackgroundColor3 = T.AccentHov }) end
             end)
             TrackBg.MouseLeave:Connect(function()
-                if not isDragging then
-                    Tween(Knob, TweenInfo.new(0.12), { BackgroundColor3 = T.Text })
-                end
+                if not isDragging then Tween(Knob, TweenInfo.new(0.12), { BackgroundColor3 = T.Text }) end
             end)
 
-            return {
-                SetValue = function(v) ApplySlider(math.clamp(v, mn, mx)) end,
-                GetValue = function() return cur end,
-            }
+            return { SetValue = function(v) ApplySlider(math.clamp(v, mn, mx)) end, GetValue = function() return cur end }
         end
 
-        -- ── INPUT / TEXTAREA ─────────────────
         function Elem:Input(cfg)
             cfg = cfg or {}
             local isTA = cfg.Type == "Textarea"
@@ -1167,9 +1007,7 @@ function Library:CreateWindow(config)
             TB.Font                  = Enum.Font.Gotham
             TB.TextSize              = 12
             TB.TextXAlignment        = Enum.TextXAlignment.Left
-            TB.TextYAlignment        = isTA
-                and Enum.TextYAlignment.Top
-                or  Enum.TextYAlignment.Center
+            TB.TextYAlignment        = isTA and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
             TB.TextWrapped           = isTA
             TB.MultiLine             = isTA
             TB.ClearTextOnFocus      = false
@@ -1186,18 +1024,16 @@ function Library:CreateWindow(config)
                 if cfg.Callback then task.spawn(cfg.Callback, TB.Text) end
             end)
 
-            return {
-                SetValue = function(v) TB.Text = v end,
-                GetValue = function() return TB.Text end,
-            }
+            return { SetValue = function(v) TB.Text = v end, GetValue = function() return TB.Text end }
         end
 
-        -- ── SECTION DIVIDER ──────────────────
         function Elem:Section(text)
+            elemCount = elemCount + 1
             local wrap = Instance.new("Frame")
             wrap.Size                  = UDim2.new(1, 0, 0, 26)
             wrap.BackgroundTransparency= 1
             wrap.BorderSizePixel       = 0
+            wrap.LayoutOrder           = elemCount
             wrap.Parent                = TabV2.Scroll
 
             local line = Instance.new("Frame")
@@ -1230,9 +1066,9 @@ function Library:CreateWindow(config)
         end
 
         return Elem
-    end -- :Tab()
+    end
 
     return WindowObj
-end -- :CreateWindow()
+end
 
 return Library
