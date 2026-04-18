@@ -275,8 +275,8 @@ function Library:CreateWindow(config)
         Parent    = TitleBar,
     })
 
-    -- ── Draggable (TitleBar is the drag handle) ───────────────────────────────
-    MakeDraggable(MainWindow, TitleBar)
+    -- ── Draggable anywhere on the window ─────────────────────────────────────
+    MakeDraggable(MainWindow, MainWindow)
 
     -- Author
     if author ~= "" then
@@ -296,7 +296,7 @@ function Library:CreateWindow(config)
 
     -- Close button (X)
     local CloseBtn = Create("TextButton", {
-        Text      = "Close",
+        Text      = "CLOSE",
         Font      = Enum.Font.GothamBold,
         TextSize  = 14,
         TextColor3 = Theme.TextSecondary,
