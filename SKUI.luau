@@ -887,20 +887,31 @@ function Library:CreateWindow(config)
     ContentArea.BackgroundTransparency = 1; ContentArea.BorderSizePixel = 0; ContentArea.Parent = Main
 
     -- ── Minimize / Close ───────────────────────────
-    local minimized = false
-    MiniBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            Tween(Main,TweenInfo.new(0.22,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,46)})
-        else
-            local cw = Main.AbsoluteSize.X
-            Tween(Main,TweenInfo.new(0.28,Enum.EasingStyle.Back),{Size=UDim2.fromOffset(cw,H)})
-        end
+local FULL_H    = 434
+local minimized = false
+
+TBarMini.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        Tween(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quad),
+            { Size = UDim2.new(0, 594, 0, 46) })
+    else
+        Tween(Main, TweenInfo.new(0.28, Enum.EasingStyle.Back),
+            { Size = UDim2.new(0, 594, 0, FULL_H) })
+    end
+end)
+
+-- UPDATED CLOSE BUTTON LOGIC:
+CloseBtn.MouseButton1Click:Connect(function()
+    -- Animate closing
+    Tween(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+        { Size = UDim2.new(0, 594, 0, 0), BackgroundTransparency = 1 })
+    
+    -- Wait for animation then delete everything
+    task.delay(0.22, function() 
+        ScreenGui:Destroy() 
     end)
-    CloseBtn.MouseButton1Click:Connect(function()
-        Tween(Main,TweenInfo.new(0.18,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,0)})
-        task.delay(0.2, function() Main.Visible = false end)
-    end)
+end)
 
     -- ── ToggleKey ──────────────────────────────────
     if config.ToggleKey then
