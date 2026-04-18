@@ -886,32 +886,28 @@ function Library:CreateWindow(config)
     ContentArea.Position = UDim2.new(0,SIDEW+4,0,50)
     ContentArea.BackgroundTransparency = 1; ContentArea.BorderSizePixel = 0; ContentArea.Parent = Main
 
-    -- ── Minimize / Close ───────────────────────────
-local FULL_H    = 434
-local minimized = false
-
-TBarMini.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        Tween(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quad),
-            { Size = UDim2.new(0, 594, 0, 46) })
-    else
-        Tween(Main, TweenInfo.new(0.28, Enum.EasingStyle.Back),
-            { Size = UDim2.new(0, 594, 0, FULL_H) })
-    end
-end)
-
--- UPDATED CLOSE BUTTON LOGIC:
-CloseBtn.MouseButton1Click:Connect(function()
-    -- Animate closing
-    Tween(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad),
-        { Size = UDim2.new(0, 594, 0, 0), BackgroundTransparency = 1 })
-    
-    -- Wait for animation then delete everything
-    task.delay(0.22, function() 
-        ScreenGui:Destroy() 
+-- ── Minimize / Close ───────────────────────────
+    local minimized = false
+    MiniBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            Tween(Main,TweenInfo.new(0.22,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,46)})
+        else
+            local cw = Main.AbsoluteSize.X
+            Tween(Main,TweenInfo.new(0.28,Enum.EasingStyle.Back),{Size=UDim2.fromOffset(cw,H)})
+        end
     end)
-end)
+    
+    -- UPDATED CLOSE BUTTON LOGIC:
+    CloseBtn.MouseButton1Click:Connect(function()
+        -- Animate the window shrinking and fading away
+        Tween(Main,TweenInfo.new(0.18,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,0), BackgroundTransparency=1})
+        
+        -- Destroy the entire ScreenGui after the animation finishes
+        task.delay(0.2, function() 
+            ScreenGui:Destroy() 
+        end)
+    end)
 
     -- ── ToggleKey ──────────────────────────────────
     if config.ToggleKey then
