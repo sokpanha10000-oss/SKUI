@@ -219,8 +219,8 @@ function Library:CreateWindow(config)
     -- ── Main Window ───────────────────────────────────────────────────────────
     local MainWindow = Create("Frame", {
         Name            = "MainWindow",
-        Size            = UDim2.new(0, 560, 0, 350),
-        Position        = UDim2.new(0.5, -290, 0.5, -210),
+        Size            = UDim2.new(0, 560, 0, 380),
+        Position        = UDim2.new(0.5, -280, 0.5, -190),
         BackgroundColor3 = Theme.Background,
         BorderSizePixel = 0,
         ClipsDescendants = true,
@@ -275,8 +275,8 @@ function Library:CreateWindow(config)
         Parent    = TitleBar,
     })
 
-    -- ── Draggable anywhere on the window ─────────────────────────────────────
-    MakeDraggable(MainWindow, MainWindow)
+    -- ── Draggable by Title Bar only ───────────────────────────────────────────
+    MakeDraggable(MainWindow, TitleBar)
 
     -- Author
     if author ~= "" then
@@ -296,7 +296,7 @@ function Library:CreateWindow(config)
 
     -- Close button (X)
     local CloseBtn = Create("TextButton", {
-        Text      = "CLOSE",
+        Text      = "✕",
         Font      = Enum.Font.GothamBold,
         TextSize  = 14,
         TextColor3 = Theme.TextSecondary,
@@ -318,7 +318,7 @@ function Library:CreateWindow(config)
     CloseBtn.MouseButton1Click:Connect(function()
         -- Animate window shrink
         Tween(MainWindow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 580, 0, 0),
+            Size = UDim2.new(0, 560, 0, 0),
         })
         -- Animate MinimizeBtn shrink/fade if it exists
         if Window._floatFrame and Window._floatFrame.Parent then
@@ -425,9 +425,6 @@ function Library:CreateWindow(config)
         -- Register so CloseBtn can destroy it
         self._floatFrame = FloatFrame
 
-        -- Draggable: drag the frame itself, but only when NOT clicking the button
-        MakeDraggable(FloatFrame, FloatFrame)
-
         local BtnLabel = Create("TextLabel", {
             Text      = "◉  " .. btnName,
             Font      = Enum.Font.GothamBold,
@@ -448,25 +445,75 @@ function Library:CreateWindow(config)
             if isOpen then
                 BtnLabel.Text = "◉  " .. btnName
                 Tween(FloatFrame, TweenInfo.new(0.2), { BackgroundColor3 = btnColor })
-                MainWindow.Size = UDim2.new(0, 580, 0, 0)
-                Tween(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Size = UDim2.new(0, 580, 0, 420) })
+                MainWindow.Size = UDim2.new(0, 560, 0, 0)
+                Tween(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Size = UDim2.new(0, 560, 0, 380) })
             else
                 BtnLabel.Text = "⊙  " .. btnName
                 Tween(FloatFrame, TweenInfo.new(0.2), { BackgroundColor3 = Theme.Surface })
-                Tween(MainWindow, TweenInfo.new(0.25), { Size = UDim2.new(0, 580, 0, 0) })
+                Tween(MainWindow, TweenInfo.new(0.25), { Size = UDim2.new(0, 560, 0, 0) })
                 task.delay(0.25, function() if not isOpen then MainWindow.Visible = false end end)
             end
         end
 
-        -- click button
+        -- ── Unified drag + click on ClickRegion ──────────────────────────────
+        -- ClickRegion (ZIndex 22) sits on top of FloatFrame and absorbs all mouse
+        -- input, so we wire both drag and toggle logic through it.
+        -- A movement threshold distinguishes a drag from a plain click.
         local ClickRegion = Create("TextButton", {
             Text = "",
             BackgroundTransparency = 1,
-            Size = UDim2.fromScale(1,1),
+            Size = UDim2.fromScale(1, 1),
             ZIndex = 22,
             Parent = FloatFrame,
         })
-        ClickRegion.MouseButton1Click:Connect(toggleUI)
+
+        local _dragging   = false
+        local _hasMoved   = false
+        local _dragInput  = nil
+        local _dragStart  = nil
+        local _startPos   = nil
+        local DRAG_THRESH = 4  -- pixels before we treat movement as a drag
+
+        ClickRegion.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                _dragging  = true
+                _hasMoved  = false
+                _dragStart = input.Position
+                _startPos  = FloatFrame.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        _dragging = false
+                    end
+                end)
+            end
+        end)
+
+        ClickRegion.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                _dragInput = input
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if _dragging and input == _dragInput and _dragStart then
+                local delta = input.Position - _dragStart
+                if math.abs(delta.X) > DRAG_THRESH or math.abs(delta.Y) > DRAG_THRESH then
+                    _hasMoved = true
+                end
+                FloatFrame.Position = UDim2.new(
+                    _startPos.X.Scale,  _startPos.X.Offset + delta.X,
+                    _startPos.Y.Scale,  _startPos.Y.Offset + delta.Y
+                )
+            end
+        end)
+
+        -- Only toggle when the mouse did NOT drag
+        ClickRegion.MouseButton1Click:Connect(function()
+            if not _hasMoved then
+                toggleUI()
+            end
+            _hasMoved = false
+        end)
 
         ClickRegion.MouseEnter:Connect(function()
             Tween(FloatFrame, TweenInfo.new(0.15), { Size = UDim2.new(0, 116, 0, 36) })
@@ -1026,9 +1073,7 @@ function Library:CreateWindow(config)
             Create("UIStroke", { Color = Theme.Border, Thickness = 1, Parent = InputBox })
 
             InputBox.Focused:Connect(function()
-                Tween(InputBox, TweenInfo.new(0.15), { })
-                TweenService:Create(InputBox, TweenInfo.new(0.15), {}):Play()
-                -- highlight border via stroke
+                -- highlight border on focus
                 for _, c in ipairs(InputBox:GetChildren()) do
                     if c:IsA("UIStroke") then
                         Tween(c, TweenInfo.new(0.15), { Color = Theme.Accent })
