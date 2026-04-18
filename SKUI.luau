@@ -370,7 +370,7 @@ function Library:CreateWindow(config)
     local Main = Instance.new("Frame")
     Main.Name             = "MainWindow"
     Main.Size             = UDim2.new(0, 560, 0, 350)
-    Main.Position         = UDim2.new(0.5, -297, 0.5, -217)
+    Main.Position         = UDim2.new(0.5, -297, 0.5, -117)
     Main.BackgroundColor3 = T.Bg
     Main.BorderSizePixel  = 0
     Main.ClipsDescendants = true
