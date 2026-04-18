@@ -33,7 +33,7 @@ local MinimizeBtn = Window:CreateMinimizeBtn({
 })
 ```
 
-#### Color
+### Color
 ```lua
 Red
 ```
@@ -50,7 +50,7 @@ local Tab = Window:Tab({
 })
 ```
 
-#### Elements
+### Elements
 *Create Elements*
 
 #### Toggle
