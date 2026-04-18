@@ -1,9 +1,9 @@
 # ✨ SKUI (SK Library V2.5)
 
 ## 📌 About
-- **SKUI** is a rebuilt and optimized version of **SK Library V1**.
+- **SKUI** is a rebuilt and optimized version of **SK Library V2.5**.
 - It uses the same UI style as the original, with some improvements and refinements.
-- The reason the UI is named **SK** is that it should be the name of the next generation of **redz Hub** UIs
+- The reason the UI is named **SK** is that it should be the name of the next generation of **SK Hub** UIs
 
 - 🔹 Made by **STEVEKHMER**  
 - 🔹 Designed mainly for use in **SK Hub** scripts  
