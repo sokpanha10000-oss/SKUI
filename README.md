@@ -19,7 +19,7 @@ local SKUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha
 
 ### Creating a Window
 ```lua
-local Window = UI:CreateWindow({
+local Window = SKUI:CreateWindow({
     Title = "My Super Hub",
     Author = "by .ftgs and .ftgs", -- optional
 })
