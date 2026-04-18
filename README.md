@@ -1,20 +1,20 @@
 # ✨ Wand UI (Redz Library V5 Remake)
 
 ## 📌 About
-- **Wand UI** is a rebuilt and optimized version of **Redz Library V5**.
+- **SKUI** is a rebuilt and optimized version of **SK Library V1**.
 - It uses the same UI style as the original, with some improvements and refinements.
-- The reason the UI is named **Wand** is that it should be the name of the next generation of **redz Hub** UIs
+- The reason the UI is named **SK** is that it should be the name of the next generation of **redz Hub** UIs
 
-- 🔹 Made by **real_redz**  
-- 🔹 Designed mainly for use in **Redz Hub** scripts  
+- 🔹 Made by **STEVEKHMER**  
+- 🔹 Designed mainly for use in **SK Hub** scripts  
 - 🔹 Open-Source, Lightweight, and Optimized  
 
 ---
 
 ## 🚀 Getting Starte
-To load **Wand UI**, simply run:
+To load **SKUI**, simply run:
 ```lua
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/tlredz/Library/refs/heads/main/redz-V5-remake/main.luau"))()
+local SKUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha10000-oss/SKUI/refs/heads/main/SKUI.luau"))()
 ```
 
 ### Creating a Window
@@ -24,45 +24,6 @@ local Window = Library:MakeWindow({
   SubTitle = "dev by real_redz",
   ScriptFolder = "redz-library-V5"
 })
-```
-
-- NewMinimizer: (self: Window, Config: { KeyCode: KeyCode }) -> Minimizer
-  - IsMinimied: boolean
-  - Cancel: (self: Minimizer) -> (nil)
-  - Minimize: (self: Minimizer) -> (nil)
-  - CreateMobileMinimizer: (self: Minimizer, ButtonProperties: { [string]: any? }) -> ImageButton
-- MakeTab: (self: Window, Configs: { Title: string, Icon: string? }) -> Tab
-  - IsEnabled: boolean
-  - Title: string
-  - Icon: string
-  - Select: (self: Tab) -> (nil)
-- Notify: (self: Window, Configs: { Title: string, Content: string, Duration: number?, Image: string? } ) -> Notification
-  - Close: (self: Notification)
-  - Closed: boolean
-- NewNotifyGroup: (self: Window, Configs: { Title: string?, Content: string?, Duration: number?, Image: string? }) -> NotificationGroup
-  - Notify: (self: Window, Configs: { Title: string?, Content: string?, Duration: number?, Image: string? }) -> Notification
-- Dialog: (self: Window, Configs: { Title: string, Content: string, Options: { { Name: string, Callback: function? } }) -> Dialog
-  - Close: (self: Dialog) -> (nil)
-  - NewOption: (self: Dialog, Configs: { Name: string, Callback: function? }) -> (nil)
-- SelectTab: (self: Window, Tab: Tab | number) -> (nil)
-- SetUIScale: (self: Window | Library, Value: number) -> (nil)
-- GetMaxScale: (self: Library) -> number
-- GetMinScale: (self: Library) -> number
-- SetTitle: (self: Window, Title: string) -> (nil)
-- SetSubTitle: (self: Window, SubTitle: string) -> (nil)
-- GetTitle: (self: Window) -> string
-- GetSubTitle: (self: Window) -> string
-- MinimizeButton: (self: Window) -> (nil)
-- IsValidTheme: (self: Library, ThemeName: string) -> boolean
-- SetTheme: (self: Library, ThemeName: string) -> (nil)
-- GetTheme: (self: Library, ThemeName: string?) -> LibraryTheme
-  - Name: string
-- GetThemes: (self: Library) -> { string }
-- GetIconByName: (self: Library, IconName: string) -> string?
-- Destroy: (self: Library | Window) -> (nil)
-- DeleteFlags: (self: Window) -> (Success: boolean)
-- GetFlag: (self: Window, Flag: string, Value: any?) -> (nil)
-- SetFlag: (self: Window, Flag: string) -> any
 
 ### Minimizer
 ```lua
