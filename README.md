@@ -1,4 +1,4 @@
-# ✨ SKUI (SK Library V1)
+# ✨ SKUI (SK Library V2.5)
 
 ## 📌 About
 - **SKUI** is a rebuilt and optimized version of **SK Library V1**.
@@ -41,7 +41,7 @@ Red
 Blue
 ```
 
-### Creating a Tab
+#### Creating a Tab
 Normal
 ```lua
 local Tab = Window:Tab({
@@ -50,7 +50,7 @@ local Tab = Window:Tab({
 })
 ```
 
-### Elements
+#### Elements
 *Create Elements*
 
 #### Toggle
