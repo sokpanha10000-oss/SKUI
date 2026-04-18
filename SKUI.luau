@@ -231,8 +231,6 @@ function Library:CreateWindow(config)
     -- outer glow
     Create("UIStroke",  { Color = Theme.Border, Thickness = 1, Parent = MainWindow })
 
-    MakeDraggable(MainWindow)
-
     -- ── Title Bar ─────────────────────────────────────────────────────────────
     local TitleBar = Create("Frame", {
         Name            = "TitleBar",
@@ -277,6 +275,9 @@ function Library:CreateWindow(config)
         Parent    = TitleBar,
     })
 
+    -- ── Draggable (TitleBar is the drag handle) ───────────────────────────────
+    MakeDraggable(MainWindow, TitleBar)
+
     -- Author
     if author ~= "" then
         Create("TextLabel", {
@@ -295,7 +296,7 @@ function Library:CreateWindow(config)
 
     -- Close button (X)
     local CloseBtn = Create("TextButton", {
-        Text      = "✕",
+        Text      = "Close",
         Font      = Enum.Font.GothamBold,
         TextSize  = 14,
         TextColor3 = Theme.TextSecondary,
@@ -315,8 +316,26 @@ function Library:CreateWindow(config)
         Tween(CloseBtn, TweenInfo.new(0.15), { BackgroundTransparency = 0.7, TextColor3 = Theme.TextSecondary })
     end)
     CloseBtn.MouseButton1Click:Connect(function()
-        Tween(MainWindow, TweenInfo.new(0.25), { Size = UDim2.new(0, 580, 0, 0) })
-        task.delay(0.25, function() MainWindow.Visible = false end)
+        -- Animate window shrink
+        Tween(MainWindow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 580, 0, 0),
+        })
+        -- Animate MinimizeBtn shrink/fade if it exists
+        if Window._floatFrame and Window._floatFrame.Parent then
+            Tween(Window._floatFrame, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 0, 0, 0),
+                BackgroundTransparency = 1,
+            })
+        end
+        -- After animation: destroy ScreenGui (kills Window + all modals) and float btn
+        task.delay(0.3, function()
+            if ScreenGui and ScreenGui.Parent then
+                ScreenGui:Destroy()
+            end
+            if Window._floatFrame and Window._floatFrame.Parent then
+                Window._floatFrame:Destroy()
+            end
+        end)
     end)
 
     -- ── Tab Bar ───────────────────────────────────────────────────────────────
@@ -383,6 +402,7 @@ function Library:CreateWindow(config)
     Window._overlay      = DropdownOverlay
     Window._tabs         = {}
     Window._activeTab    = nil
+    Window._floatFrame   = nil  -- set by CreateMinimizeBtn
 
     -- ── CreateMinimizeBtn ─────────────────────────────────────────────────────
     function Window:CreateMinimizeBtn(cfg)
@@ -402,7 +422,11 @@ function Library:CreateWindow(config)
         Create("UICorner", { CornerRadius = UDim.new(0, 17), Parent = FloatFrame })
         Create("UIStroke", { Color = Color3.fromRGB(255,255,255), Thickness = 1, Transparency = 0.7, Parent = FloatFrame })
 
-        MakeDraggable(FloatFrame)
+        -- Register so CloseBtn can destroy it
+        self._floatFrame = FloatFrame
+
+        -- Draggable: drag the frame itself, but only when NOT clicking the button
+        MakeDraggable(FloatFrame, FloatFrame)
 
         local BtnLabel = Create("TextLabel", {
             Text      = "◉  " .. btnName,
