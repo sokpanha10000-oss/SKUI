@@ -1,7 +1,7 @@
-# ✨ SKUI (SK Library V2.5)
+# ✨ SKUI (SK Library V3.0)
 
 ## 📌 About
-- **SKUI** is a rebuilt and optimized version of **SK Library V2.5**.
+- **SKUI** is a rebuilt and optimized version of **SK Library V3.0**.
 - It uses the same UI style as the original, with some improvements and refinements.
 - The reason the UI is named **SK** is that it should be the name of the next generation of **SK Hub** UIs
 
@@ -22,6 +22,67 @@ local SKUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha
 local Window = SKUI:CreateWindow({
     Title = "My Super Hub",
     Author = "by .ftgs and .ftgs", -- optional
+})
+```
+```lua
+local Window = SKUI:CreateWindow({
+    Title = "My Super Hub",
+    Author = "by .ftgs and .ftgs",
+    Folder = "MySuperHub",
+    
+    -- ↓ This all is Optional. You can remove it.
+    Size = UDim2.fromOffset(550, 340),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    ToggleKey = Enum.KeyCode.LeftShift,
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    
+    -- ↓ Optional. You can remove it.
+    --[[ You can set 'rbxassetid://' or video to Background.
+        'rbxassetid://':
+            Background = "rbxassetid://", -- rbxassetid
+        Video:
+            Background = "video:YOUR-RAW-LINK-TO-VIDEO.webm", -- video 
+    --]]
+    
+    -- ↓ Optional. You can remove it.
+    User = {
+        Enabled = true,
+        Anonymous = true,
+        Callback = function()
+            print("clicked")
+        end,
+    },
+    
+    --       remove this all, 
+    -- !  ↓  if you DON'T need the key system
+    KeySystem = { 
+        -- ↓ Optional. You can remove it.
+        Key = { "1234", "5678" },
+        
+        Note = "Example Key System.",
+        
+        -- ↓ Optional. You can remove it.
+        Thumbnail = {
+            Image = "rbxassetid://",
+            Title = "Thumbnail",
+        },
+        
+        -- ↓ Optional. You can remove it.
+        URL = "YOUR LINK TO GET KEY (Discord, Linkvertise, Pastebin, etc.)",
+        
+        -- ↓ Optional. You can remove it.
+        SaveKey = false, -- automatically save and load the key.
+        
+        -- ↓ Optional. You can remove it.
+        -- API = {} ← Services. Read about it below ↓
+    },
 })
 ```
 
