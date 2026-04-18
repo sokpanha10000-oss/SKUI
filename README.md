@@ -1,4 +1,4 @@
-# ✨ Wand UI (Redz Library V5 Remake)
+# ✨ SKUI (SK Library V1)
 
 ## 📌 About
 - **SKUI** is a rebuilt and optimized version of **SK Library V1**.
@@ -24,6 +24,7 @@ local Window = Library:MakeWindow({
   SubTitle = "dev by real_redz",
   ScriptFolder = "redz-library-V5"
 })
+```
 
 ### Minimizer
 ```lua
