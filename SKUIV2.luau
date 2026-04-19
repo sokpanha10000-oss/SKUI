@@ -1,13 +1,13 @@
-if getgenv().Nousigi then 
-	if game.CoreGui:FindFirstChild("Nousigi Hub GUI") then
+if getgenv().SKUIV2 then 
+	if game.CoreGui:FindFirstChild("SKUIV2 Hub UI") then
 		for i, v in ipairs(game.CoreGui:GetChildren()) do
-			if string.find(v.Name,  "Nousigi Hub") then
+			if string.find(v.Name,  "SK hub") then
 				v:Destroy()
 			end
 		end
 	end
 end
-getgenv().Nousigi = true
+getgenv().SKUIV2 = true
 
 local DisableAnimation = game.Players.LocalPlayer.PlayerGui:FindFirstChild('TouchGui')
 local T1UIColor = {
@@ -98,7 +98,7 @@ end
 
 Library_Function.Gui = Instance.new('ScreenGui')
 Library_Function.Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-Library_Function.Gui.Name = 'Nousigi Hub GUI'
+Library_Function.Gui.Name = 'SKUIV2 Hub UI'
 Library_Function.Gui.Enabled = false
 
 getgenv().ReadyForGuiLoaded = false
@@ -114,11 +114,11 @@ end)
 
 Library_Function.NotiGui = Instance.new('ScreenGui')
 Library_Function.NotiGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-Library_Function.NotiGui.Name = 'Nousigi Hub Notification'
+Library_Function.NotiGui.Name = 'SKUIV2 Hub Notification'
 
 Library_Function.HideGui = Instance.new('ScreenGui')
 Library_Function.HideGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-Library_Function.HideGui.Name = 'Nousigi Hub Btn'
+Library_Function.HideGui.Name = 'SKUIV2 Hub Btn'
 
 
 local btnHide = Instance.new('TextButton', Library_Function.HideGui) 
@@ -157,9 +157,9 @@ Library.ToggleUI = function()
 	TweenService:Create(btnHideFrame, TweenInfo.new(DisableAnimation and 0 or .25), {
 		BackgroundTransparency = getgenv().UIToggled and 0 or .25
 	}):Play()
-	if game.CoreGui:FindFirstChild("Nousigi Hub GUI") then
+	if game.CoreGui:FindFirstChild("SKUIV2 Hub UI") then
 		for a, b in ipairs(game.CoreGui:GetChildren()) do
-			if b.Name == "Nousigi Hub GUI" then
+			if b.Name == "SKUIV2 Hub UI" then
 				b.Enabled = getgenv().UIToggled
 			end
 		end
@@ -167,9 +167,9 @@ Library.ToggleUI = function()
 end
 
 Library.DestroyUI = function()
-	if game.CoreGui:FindFirstChild("Nousigi Hub GUI") then
+	if game.CoreGui:FindFirstChild("SKUIV2 Hub UI") then
 		for i, v in ipairs(game.CoreGui:GetChildren()) do
-			if string.find(v.Name,  "Nousigi Hub") then
+			if string.find(v.Name,  "SK hub") then
 				v:Destroy()
 			end
 		end
@@ -336,7 +336,7 @@ local libCreateNoti = function(Setting)
 	local colorG = tostring(Library_Function.Getcolor(getgenv().UIColor['Title Text Color'])[2])
 	local colorB = tostring(Library_Function.Getcolor(getgenv().UIColor['Title Text Color'])[3])
 	local color = colorR .. ',' .. colorG .. ',' .. colorB
-    TextLabelNoti.Text = "<font color=\"rgb(" .. tostring(color or "255,206,27") .. ")\">" .. tostring("Night Slayer Hub") .. "</font> " .. tostring(getgenv().TitleNameNoti or "")
+    TextLabelNoti.Text = "<font color=\"rgb(" .. tostring(color or "255,206,27") .. ")\">" .. tostring("SKUIV2 Hub") .. "</font> " .. tostring(getgenv().TitleNameNoti or "")
     
 	TextLabelNoti.Name = "TextLabelNoti"
 	TextLabelNoti.Parent = Topnoti
@@ -443,7 +443,7 @@ function Library:Notify(Setting, bypass)
 end
 
 function Library:CreateWindow(Setting)
-    local TitleNameMain = Setting.Title or "Night Slayer Hub"
+    local TitleNameMain = Setting.Title or "SKUIV2 Hub"
     getgenv().MainDesc = Setting.Desc or Setting.Subtitle or ""
     
     if Setting.Image then
@@ -578,7 +578,7 @@ function Library:CreateWindow(Setting)
 	local colorG = tostring(Library_Function.Getcolor(getgenv().UIColor['Title Text Color'])[2])
 	local colorB = tostring(Library_Function.Getcolor(getgenv().UIColor['Title Text Color'])[3])
 	local color = colorR .. ',' .. colorG .. ',' .. colorB
-    TextLabelMain.Text = "<font color=\"rgb(" .. tostring(color or "255,206,27") .. ")\">" .. tostring(TitleNameMain or "Night Slayer Hub") .. "</font> " .. tostring(getgenv().MainDesc or "")
+    TextLabelMain.Text = "<font color=\"rgb(" .. tostring(color or "255,206,27") .. ")\">" .. tostring(TitleNameMain or "SKUIV2 Hub") .. "</font> " .. tostring(getgenv().MainDesc or "")
 
 	PageControl.Name = "Background1"
 	PageControl.Parent = Concacmain
@@ -3552,3 +3552,72 @@ end
 end
 
 return Library
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  SKUIV2 Hub — Real Usage (Blox Fruits)
+--  loadstring(game:HttpGet("YOUR_RAW_URL"))()
+-- ════════════════════════════════════════════════════════════════════════════
+
+local Players       = game:GetService("Players")
+local RunService    = game:GetService("RunService")
+local TweenService  = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer   = Players.LocalPlayer
+local Character     = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid      = Character:WaitForChild("Humanoid")
+local RootPart      = Character:WaitForChild("HumanoidRootPart")
+
+-- ── Shared state ─────────────────────────────────────────────────────────────
+local State = {
+    AutoFarm       = false,
+    AutoFarmMob    = "Pirate",
+    FarmRadius     = 30,
+    AutoCollect    = false,
+    NoClip         = false,
+    InfJump        = false,
+    BringMobs      = false,
+    SelectedFruit  = "Dragon",
+    AutoSkills     = { Z = false, X = false, C = false, V = false },
+    WalkSpeed      = 16,
+    JumpPower      = 50,
+    TargetPlayer   = "",
+    FOV            = 70,
+    AutoStats      = false,
+    StatType       = "Melee",
+}
+
+-- ── Utility helpers ───────────────────────────────────────────────────────────
+local function notify(title, desc, dur)
+    Library:Notify({ Title = title, Description = desc, Duration = dur or 4 })
+end
+
+local function getChar()
+    return LocalPlayer.Character
+end
+
+local function getRoot()
+    local c = getChar()
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function getHum()
+    local c = getChar()
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+
+local function tpTo(cf)
+    local root = getRoot()
+    if root then root.CFrame = cf end
+end
+
+local function getNearestMob(name, radius)
+    local nearest, dist = nil, radius or math.huge
+    for _, mob in pairs(workspace:GetDescendants()) do
+        if mob:IsA("Model") and mob.Name:lower():find(name:lower()) and mob:FindFirstChild("HumanoidRootPart") then
+            local d = (mob.HumanoidRootPart.Position - RootPart.Position).Magnitude
+            if d < dist then nearest = mob; dist = d end
+        end
+    end
+    return nearest
+end
