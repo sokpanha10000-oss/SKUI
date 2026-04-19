@@ -1,13 +1,19 @@
 --[[
 ╔══════════════════════════════════════════════════════════════════╗
-║                  ftgs UI Library  v3.1                           ║
-║  Real Lucide Icons · Key System · Themes · Resizable             ║
+║                  ftgs UI Library  v3.2                           ║
+║  Built-in Icons · Key System · Themes · Resizable               ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
-║  -- 1. Load the icon module FIRST, then pass it to the library   ║
-║  local IconModule = loadstring(game:HttpGet("ICON_RAW_URL"))()   ║
-║  local WindUI    = loadstring(game:HttpGet("LIB_RAW_URL"))()     ║
-║  WindUI:SetIconModule(IconModule)   -- connect icons             ║
+║  Icons are now BUILT-IN — no separate IconModule load needed!    ║
+║                                                                  ║
+║  local WindUI = loadstring(game:HttpGet("LIB_RAW_URL"))()        ║
+║                                                                  ║
+║  -- Optional: override the built-in icon module                  ║
+║  -- WindUI:SetIconModule(YourCustomIconModule)                    ║
+║                                                                  ║
+║  -- Optional: switch icon pack (default = "lucide")              ║
+║  -- WindUI:SetIconsType("solar")  -- lucide|solar|craft|         ║
+║  --                                  geist|sfsymbols|gravity     ║
 ║                                                                  ║
 ║  local Window = WindUI:CreateWindow({                            ║
 ║      Title   = "My Super Hub",                                   ║
@@ -102,6 +108,207 @@ local RunService       = game:GetService("RunService")
 local Player           = Players.LocalPlayer
 
 -- ═══════════════════════════════════════════════
+--  ICON MODULE  (built-in — lucide/solar/craft/geist/sfsymbols/gravity)
+-- ═══════════════════════════════════════════════
+local _cloneref   = (cloneref or clonereference or function(i) return i end)
+local _HttpSvc    = _cloneref(game:GetService("HttpService"))
+
+local function _IconGet(url)
+    if writefile and game.HttpGet then
+        return game:HttpGet(url)
+    else
+        return _HttpSvc:GetAsync(url)
+    end
+end
+
+local function _parseIconString(iconString)
+    if type(iconString) == "string" then
+        local splitIndex = iconString:find(":")
+        if splitIndex then
+            local iconType = iconString:sub(1, splitIndex - 1)
+            local iconName = iconString:sub(splitIndex + 1)
+            return iconType, iconName
+        end
+    end
+    return nil, iconString
+end
+
+local IconModule = {
+    IconsType    = "lucide",
+    New          = nil,
+    IconThemeTag = nil,
+    Icons        = {
+        lucide    = loadstring(_IconGet("https://raw.githubusercontent.com/Footagesus/Icons/refs/heads/main/lucide/dist/Icons.lua"))(),
+        solar     = loadstring(_IconGet("https://raw.githubusercontent.com/Footagesus/Icons/refs/heads/main/solar/dist/Icons.lua"))(),
+        craft     = loadstring(_IconGet("https://raw.githubusercontent.com/Footagesus/Icons/refs/heads/main/craft/dist/Icons.lua"))(),
+        geist     = loadstring(_IconGet("https://raw.githubusercontent.com/Footagesus/Icons/refs/heads/main/geist/dist/Icons.lua"))(),
+        sfsymbols = loadstring(_IconGet("https://raw.githubusercontent.com/Footagesus/Icons/refs/heads/main/sfsymbols/dist/Icons.lua"))(),
+        gravity   = loadstring(_IconGet("https://raw.githubusercontent.com/Footagesus/Icons/refs/heads/main/gravity/dist/Icons.lua"))(),
+    },
+}
+
+function IconModule.AddIcons(packName, iconsData)
+    if type(packName) ~= "string" or type(iconsData) ~= "table" then
+        error("AddIcons: packName must be string, iconsData must be table")
+        return
+    end
+    if not IconModule.Icons[packName] then
+        IconModule.Icons[packName] = { Icons = {}, Spritesheets = {} }
+    end
+    for iconName, iconValue in pairs(iconsData) do
+        if type(iconValue) == "number" or (type(iconValue) == "string" and iconValue:match("^rbxassetid://")) then
+            local imageId = iconValue
+            if type(iconValue) == "number" then
+                imageId = "rbxassetid://" .. tostring(iconValue)
+            end
+            IconModule.Icons[packName].Icons[iconName] = {
+                Image             = imageId,
+                ImageRectSize     = Vector2.new(0, 0),
+                ImageRectPosition = Vector2.new(0, 0),
+                Parts             = nil,
+            }
+            IconModule.Icons[packName].Spritesheets[imageId] = imageId
+        elseif type(iconValue) == "table" then
+            if iconValue.Image and iconValue.ImageRectSize and iconValue.ImageRectPosition then
+                local imageId = iconValue.Image
+                if type(imageId) == "number" then
+                    imageId = "rbxassetid://" .. tostring(imageId)
+                end
+                IconModule.Icons[packName].Icons[iconName] = {
+                    Image             = imageId,
+                    ImageRectSize     = iconValue.ImageRectSize,
+                    ImageRectPosition = iconValue.ImageRectPosition,
+                    Parts             = iconValue.Parts,
+                }
+                if not IconModule.Icons[packName].Spritesheets[imageId] then
+                    IconModule.Icons[packName].Spritesheets[imageId] = imageId
+                end
+            else
+                warn("AddIcons: Invalid spritesheet data format for icon '" .. iconName .. "'")
+            end
+        else
+            warn("AddIcons: Unsupported data type for icon '" .. iconName .. "': " .. type(iconValue))
+        end
+    end
+end
+
+function IconModule.SetIconsType(iconType)
+    IconModule.IconsType = iconType
+end
+
+function IconModule.Init(New, IconThemeTag)
+    IconModule.New          = New
+    IconModule.IconThemeTag = IconThemeTag
+    return IconModule
+end
+
+function IconModule.Icon(Icon, Type, DefaultFormat)
+    DefaultFormat = DefaultFormat ~= false
+    local iconType, iconName = _parseIconString(Icon)
+    local targetType = iconType or Type or IconModule.IconsType
+    local targetName = iconName
+    local iconSet    = IconModule.Icons[targetType]
+
+    if iconSet and iconSet.Icons and iconSet.Icons[targetName] then
+        return {
+            iconSet.Spritesheets[tostring(iconSet.Icons[targetName].Image)],
+            iconSet.Icons[targetName],
+        }
+    elseif iconSet and iconSet[targetName] and string.find(iconSet[targetName], "rbxassetid://") then
+        return DefaultFormat
+            and {
+                iconSet[targetName],
+                { ImageRectSize = Vector2.new(0, 0), ImageRectPosition = Vector2.new(0, 0) },
+            }
+            or iconSet[targetName]
+    end
+    return nil
+end
+
+function IconModule.GetIcon(Icon, Type)
+    return IconModule.Icon(Icon, Type, false)
+end
+
+function IconModule.Icon2(Icon, Type)
+    return IconModule.Icon(Icon, Type, true)
+end
+
+function IconModule.Image(IconConfig)
+    local Icon = {
+        Icon   = IconConfig.Icon or nil,
+        Type   = IconConfig.Type,
+        Colors = IconConfig.Colors or { (IconModule.IconThemeTag or Color3.new(1,1,1)), Color3.new(1,1,1) },
+        Size   = IconConfig.Size  or UDim2.new(0,24,0,24),
+        IconFrame = nil,
+    }
+    local Colors = {}
+    for i, color in next, Icon.Colors do
+        Colors[i] = {
+            ThemeTag = typeof(color) == "string"  and color,
+            Color    = typeof(color) == "Color3"  and color,
+        }
+    end
+    local IconLabel    = IconModule.Icon2(Icon.Icon, Icon.Type)
+    local isrbxassetid = typeof(IconLabel) == "string" and string.find(IconLabel, "rbxassetid://")
+
+    if IconModule.New then
+        local New       = IconModule.New
+        local IconFrame = New("ImageLabel", {
+            Size                = Icon.Size,
+            BackgroundTransparency = 1,
+            ImageColor3         = Colors[1].Color or nil,
+            ThemeTag            = Colors[1].ThemeTag and { ImageColor3 = Colors[1].ThemeTag },
+            Image               = isrbxassetid and IconLabel or IconLabel[1],
+            ImageRectSize       = isrbxassetid and nil or IconLabel[2].ImageRectSize,
+            ImageRectOffset     = isrbxassetid and nil or IconLabel[2].ImageRectPosition,
+        })
+        if not isrbxassetid and IconLabel[2].Parts then
+            for i, part in next, IconLabel[2].Parts do
+                local IconPartLabel = IconModule.Icon(part, Icon.Type)
+                New("ImageLabel", {
+                    Size                = UDim2.new(1,0,1,0),
+                    BackgroundTransparency = 1,
+                    ImageColor3         = Colors[1+i].Color or nil,
+                    ThemeTag            = Colors[1+i].ThemeTag and { ImageColor3 = Colors[1+i].ThemeTag },
+                    Image               = IconPartLabel[1],
+                    ImageRectSize       = IconPartLabel[2].ImageRectSize,
+                    ImageRectOffset     = IconPartLabel[2].ImageRectPosition,
+                    Parent              = IconFrame,
+                })
+            end
+        end
+        Icon.IconFrame = IconFrame
+    else
+        local IconFrame = Instance.new("ImageLabel")
+        IconFrame.Size                = Icon.Size
+        IconFrame.BackgroundTransparency = 1
+        IconFrame.ImageColor3         = Colors[1].Color
+        IconFrame.Image               = isrbxassetid and IconLabel or IconLabel[1]
+        IconFrame.ImageRectSize       = isrbxassetid and nil or IconLabel[2].ImageRectSize
+        IconFrame.ImageRectOffset     = isrbxassetid and nil or IconLabel[2].ImageRectPosition
+        if not isrbxassetid and IconLabel[2].Parts then
+            for i, part in next, IconLabel[2].Parts do
+                local IconPartLabel = IconModule.Icon(part, Icon.Type)
+                local IconPart      = Instance.new("ImageLabel")
+                IconPart.Size                = UDim2.new(1,0,1,0)
+                IconPart.BackgroundTransparency = 1
+                IconPart.ImageColor3         = Colors[1+i].Color
+                IconPart.Image               = IconPartLabel[1]
+                IconPart.ImageRectSize       = IconPartLabel[2].ImageRectSize
+                IconPart.ImageRectOffset     = IconPartLabel[2].ImageRectPosition
+                IconPart.Parent              = IconFrame
+            end
+        end
+        Icon.IconFrame = IconFrame
+    end
+    return Icon
+end
+
+-- Active icon module — defaults to the built-in IconModule above.
+-- Call WindUI:SetIconModule(mod) or WindUI:SetIconsType(type) to customise.
+local _activeIconMod = IconModule
+
+-- ═══════════════════════════════════════════════
 --  FILE I/O  (executor-safe)
 -- ═══════════════════════════════════════════════
 local function FSWrite(p,d)   pcall(function() writefile(p,d)   end) end
@@ -153,6 +360,54 @@ local function MakeDraggable(frame,handle)
                                      startPos.Y.Scale,startPos.Y.Offset+d.Y)
         end
     end)
+end
+
+-- ── Icon resolution (supports spritesheet ImageRect) ────────────
+-- Returns { Image, RectSize, RectPos } or nil.
+local function _ResolveIcon(name)
+    if not name or name == "" then return nil end
+    local mod = _activeIconMod
+    if not mod then return nil end
+    local ok, result = pcall(function() return mod.GetIcon(name) end)
+    if not ok or not result then return nil end
+    if type(result) == "string" and result:find("rbxassetid://") then
+        return { Image=result, RectSize=Vector2.new(0,0), RectPos=Vector2.new(0,0) }
+    end
+    if type(result) == "table" and result[1] then
+        local d = result[2] or {}
+        return {
+            Image    = result[1],
+            RectSize = d.ImageRectSize     or Vector2.new(0,0),
+            RectPos  = d.ImageRectPosition or Vector2.new(0,0),
+        }
+    end
+    return nil
+end
+
+-- Convenience: returns only the asset id string (backwards-compat).
+local function GetIconImg(name)
+    local d = _ResolveIcon(name)
+    return d and d.Image or nil
+end
+
+-- Creates an ImageLabel icon child inside `parent`, with full spritesheet support.
+local function PlaceIcon(parent, name, size, color, zi, pos)
+    local d = _ResolveIcon(name)
+    if not d then return nil end
+    local IL = Instance.new("ImageLabel")
+    IL.Size               = size  or UDim2.new(0,16,0,16)
+    IL.Position           = pos   or UDim2.new(0,0,0.5,-8)
+    IL.AnchorPoint        = Vector2.new(0,0.5)
+    IL.BackgroundTransparency = 1
+    IL.Image              = d.Image
+    if d.RectSize ~= Vector2.new(0,0) then
+        IL.ImageRectSize   = d.RectSize
+        IL.ImageRectOffset = d.RectPos
+    end
+    IL.ImageColor3        = color or Color3.fromRGB(200,200,220)
+    IL.ZIndex             = zi    or 3
+    IL.Parent             = parent
+    return IL
 end
 
 -- ═══════════════════════════════════════════════
@@ -537,41 +792,22 @@ end
 -- ═══════════════════════════════════════════════
 local Library = {}
 Library.__index = Library
-Library._IconModule = nil  -- set via :SetIconModule(mod)
 
--- ── Icon helpers ────────────────────────────────
--- Call WindUI:SetIconModule(IconModule) to enable real icons.
+-- Override the built-in icon module (optional).
+-- Call WindUI:SetIconModule(mod) if you have a custom module.
 function Library:SetIconModule(mod)
-    Library._IconModule = mod
+    _activeIconMod = mod
 end
 
--- Returns rbxassetid string or nil
-local function GetIconImg(name)
-    if not name or name=="" then return nil end
-    local mod = Library._IconModule
-    if not mod then return nil end
-    local ok,result = pcall(function() return mod.GetIcon(name) end)
-    if not ok or not result then return nil end
-    if type(result)=="string" and result:find("rbxassetid://") then return result end
-    if type(result)=="table" and result[1] then return result[1] end
-    return nil
+-- Switch the active icon pack for the built-in module.
+-- Options: "lucide" | "solar" | "craft" | "geist" | "sfsymbols" | "gravity"
+function Library:SetIconsType(iconType)
+    IconModule.SetIconsType(iconType)
 end
 
--- Creates an ImageLabel icon child inside `parent`
--- Returns the ImageLabel or nil if icon not found
-local function PlaceIcon(parent, name, size, color, zi, pos)
-    local img = GetIconImg(name)
-    if not img then return nil end
-    local IL = Instance.new("ImageLabel")
-    IL.Size               = size  or UDim2.new(0,16,0,16)
-    IL.Position           = pos   or UDim2.new(0,0,0.5,-8)
-    IL.AnchorPoint        = Vector2.new(0,0.5)
-    IL.BackgroundTransparency = 1
-    IL.Image              = img
-    IL.ImageColor3        = color or Color3.fromRGB(200,200,220)
-    IL.ZIndex             = zi    or 3
-    IL.Parent             = parent
-    return IL
+-- Expose AddIcons from the built-in module for custom icon packs.
+function Library:AddIcons(packName, iconsData)
+    IconModule.AddIcons(packName, iconsData)
 end
 
 -- ────────────────────────────────────────────────
@@ -579,9 +815,9 @@ function Library:CreateWindow(config)
     config = config or {}
 
     local T       = Themes[config.Theme] or Themes.Dark
-    local W       = (config.Size or UDim2.fromOffset(590,440)).X.Offset
-    local H       = (config.Size or UDim2.fromOffset(590,440)).Y.Offset
-    local MINW    = config.MinSize and config.MinSize.X or 480
+    local W       = (config.Size or UDim2.fromOffset(540,340)).X.Offset
+    local H       = (config.Size or UDim2.fromOffset(540,340)).Y.Offset
+    local MINW    = config.MinSize and config.MinSize.X or 340
     local MINH    = config.MinSize and config.MinSize.Y or 320
     local MAXW    = config.MaxSize and config.MaxSize.X or 900
     local MAXH    = config.MaxSize and config.MaxSize.Y or 600
@@ -624,16 +860,19 @@ function Library:CreateWindow(config)
     TBFix.BackgroundColor3=T.Secondary; TBFix.BorderSizePixel=0; TBFix.ZIndex=2; TBFix.Parent=TBar
 
     -- Window Icon (left of title bar)
-    -- Layout: [14px gap] [16x16 icon] [6px] [3px pill] [8px] [Title text]
-    local titleStartX = 14  -- default without icon
-    local winIconImg  = GetIconImg(config.Icon)
+    local titleStartX  = 14
+    local winIconData  = _ResolveIcon(config.Icon)
 
-    if winIconImg then
+    if winIconData then
         local WIco=Instance.new("ImageLabel"); WIco.Size=UDim2.new(0,18,0,18)
         WIco.Position=UDim2.new(0,14,0.5,-9); WIco.AnchorPoint=Vector2.new(0,0.5)
-        WIco.BackgroundTransparency=1; WIco.Image=winIconImg
+        WIco.BackgroundTransparency=1; WIco.Image=winIconData.Image
+        if winIconData.RectSize ~= Vector2.new(0,0) then
+            WIco.ImageRectSize   = winIconData.RectSize
+            WIco.ImageRectOffset = winIconData.RectPos
+        end
         WIco.ImageColor3=T.Accent; WIco.ZIndex=3; WIco.Parent=TBar
-        titleStartX = 40  -- shift title right to make room
+        titleStartX = 40
     end
 
     local TPill=Instance.new("Frame"); TPill.Size=UDim2.new(0,3,0,22)
@@ -789,13 +1028,11 @@ function Library:CreateWindow(config)
     -- ── Tab system ───────────────────────────────
     local allTabs={}; local activeTab=nil
 
-    -- SetActiveTab also tweens the tab's icon color
     local function SetActiveTab(entry)
         if activeTab then
             Tween(activeTab.Btn,TweenInfo.new(0.15),{BackgroundColor3=T.Tertiary})
             activeTab.Btn.TextColor3=T.SubText; activeTab.Btn.Font=Enum.Font.Gotham
             activeTab.Wrapper.Visible=false
-            -- dim icon back to SubText
             if activeTab.IconLabel then
                 Tween(activeTab.IconLabel,TweenInfo.new(0.15),{ImageColor3=T.SubText})
             end
@@ -804,7 +1041,6 @@ function Library:CreateWindow(config)
         Tween(entry.Btn,TweenInfo.new(0.15),{BackgroundColor3=T.Accent})
         entry.Btn.TextColor3=T.Text; entry.Btn.Font=Enum.Font.GothamBold
         entry.Wrapper.Visible=true
-        -- brighten icon to Text color
         if entry.IconLabel then
             Tween(entry.IconLabel,TweenInfo.new(0.15),{ImageColor3=T.Text})
         end
@@ -844,10 +1080,8 @@ function Library:CreateWindow(config)
     function WindowObj:Tab(cfg)
         cfg=cfg or {}; local tabName=cfg.Title or "Tab"; local locked=cfg.Locked or false
 
-        -- Calculate if we'll have an icon to adjust left padding
-        local tabIconImg = GetIconImg(cfg.Icon)
-        -- Text: if icon present, indent text to leave room; locked shows lock emoji
-        local btnText = locked and ("🔒  "..tabName) or (tabIconImg and ("      "..tabName) or ("  "..tabName))
+        local tabIconData = not locked and _ResolveIcon(cfg.Icon) or nil
+        local btnText = locked and ("🔒  "..tabName) or (tabIconData and ("      "..tabName) or ("  "..tabName))
 
         local TabBtn=Instance.new("TextButton"); TabBtn.Size=UDim2.new(1,0,0,34)
         TabBtn.BackgroundColor3=T.Tertiary; TabBtn.Text=btnText
@@ -856,16 +1090,20 @@ function Library:CreateWindow(config)
         TabBtn.BorderSizePixel=0; TabBtn.LayoutOrder=#allTabs+1; TabBtn.Parent=SideV2.Scroll
         Corner(TabBtn,8)
 
-        -- Place icon inside the tab button (left side)
+        -- Place icon inside the tab button with full spritesheet support
         local tabIconLabel = nil
-        if tabIconImg and not locked then
+        if tabIconData then
             tabIconLabel = Instance.new("ImageLabel")
             tabIconLabel.Size             = UDim2.new(0,15,0,15)
             tabIconLabel.Position         = UDim2.new(0,10,0.5,-7)
             tabIconLabel.AnchorPoint      = Vector2.new(0,0.5)
             tabIconLabel.BackgroundTransparency = 1
-            tabIconLabel.Image            = tabIconImg
-            tabIconLabel.ImageColor3      = T.SubText  -- tweens to T.Text when active
+            tabIconLabel.Image            = tabIconData.Image
+            if tabIconData.RectSize ~= Vector2.new(0,0) then
+                tabIconLabel.ImageRectSize   = tabIconData.RectSize
+                tabIconLabel.ImageRectOffset = tabIconData.RectPos
+            end
+            tabIconLabel.ImageColor3      = T.SubText
             tabIconLabel.ZIndex           = 4
             tabIconLabel.Parent           = TabBtn
         end
@@ -1059,23 +1297,24 @@ function Library:CreateWindow(config)
 
             -- InputIcon: small ImageLabel on the left inside the input box
             local inputIconOffset = 0
-            local inputIconImg    = GetIconImg(cfg.InputIcon)
-            if inputIconImg then
-                inputIconOffset = 26   -- TextBox starts 26px further right
-                local IIco = Instance.new("ImageLabel")
-                IIco.Size             = UDim2.new(0,14,0,14)
-                IIco.Position         = UDim2.new(0,8,0.5,-7)
-                IIco.AnchorPoint      = Vector2.new(0,0.5)
-                IIco.BackgroundTransparency = 1
-                IIco.Image            = inputIconImg
-                IIco.ImageColor3      = T.SubText
-                IIco.ZIndex           = 4
-                IIco.Parent           = IBg
+            local inputIconData   = _ResolveIcon(cfg.InputIcon)
+            local icoLabel        = nil
 
-                -- brighten icon on focus
-                IBg.Changed:Connect(function(prop)
-                    -- handled below in Focused/FocusLost via tween
-                end)
+            if inputIconData then
+                inputIconOffset = 26
+                icoLabel = Instance.new("ImageLabel")
+                icoLabel.Size             = UDim2.new(0,14,0,14)
+                icoLabel.Position         = UDim2.new(0,8,0.5,-7)
+                icoLabel.AnchorPoint      = Vector2.new(0,0.5)
+                icoLabel.BackgroundTransparency = 1
+                icoLabel.Image            = inputIconData.Image
+                if inputIconData.RectSize ~= Vector2.new(0,0) then
+                    icoLabel.ImageRectSize   = inputIconData.RectSize
+                    icoLabel.ImageRectOffset = inputIconData.RectPos
+                end
+                icoLabel.ImageColor3      = T.SubText
+                icoLabel.ZIndex           = 4
+                icoLabel.Parent           = IBg
             end
 
             local TB=Instance.new("TextBox")
@@ -1088,9 +1327,6 @@ function Library:CreateWindow(config)
             TB.TextYAlignment=isTA and Enum.TextYAlignment.Top or Enum.TextYAlignment.Center
             TB.TextWrapped=isTA; TB.MultiLine=isTA; TB.ClearTextOnFocus=false
             TB.BorderSizePixel=0; TB.Parent=IBg
-
-            -- find the icon label we just created (if any) for focus tween
-            local icoLabel = inputIconImg and IBg:FindFirstChildOfClass("ImageLabel") or nil
 
             TB.Focused:Connect(function()
                 Tween(iStr,TweenInfo.new(0.15),{Color=T.Accent})
