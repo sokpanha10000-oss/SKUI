@@ -1,8 +1,8 @@
-# ✨ SKUI (SK Library V3.2)
+# ✨ SKUI (SK Library V3.2.5)
 
 ## 📌 About
-- **SKUI** is a rebuilt and optimized version of **SK Library V3.2**.
-- It uses the same UI style as the original, with some improvements and refinements.
+- **SKUI** is a rebuilt and optimized version of **SK Library V3.2.5**.
+- It is now support Icons (lucide & etc...)
 - The reason the UI is named **SK** is that it should be the name of the next generation of **SK Hub** UIs
 
 - 🔹 Made by **STEVEKHMER**  
@@ -25,6 +25,9 @@ local Window = SKUI:CreateWindow({
     Author = "by .ftgs and .ftgs", -- optional
 })
 ```
+
+### Creating a Window 2
+*recommended*
 ```lua
 local Window = SKUI:CreateWindow({
     Title = "My Super Hub",
@@ -99,6 +102,7 @@ Light
 ```lua
 local MinimizeBtn = Window:CreateMinimizeBtn({
   Title = "Open UI",
+  Icon = "bird",
   Color = "Red",
 })
 ```
