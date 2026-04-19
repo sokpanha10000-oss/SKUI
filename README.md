@@ -1,7 +1,7 @@
-# ✨ SKUI (SK Library V3.2.5)
+# ✨ SKUI (SK Library V3.3)
 
 ## 📌 About
-- **SKUI** is a rebuilt and optimized version of **SK Library V3.2.5**.
+- **SKUI** is a rebuilt and optimized version of **SK Library V3.3**.
 - It is now support Icons (lucide & etc...)
 - The reason the UI is named **SK** is that it should be the name of the next generation of **SK Hub** UIs
 
@@ -98,7 +98,7 @@ Dark
 Light
 ```
 
-### Minimizer
+### MinimizeBtn
 ```lua
 local MinimizeBtn = Window:CreateMinimizeBtn({
   Title = "Open UI",
@@ -107,7 +107,7 @@ local MinimizeBtn = Window:CreateMinimizeBtn({
 })
 ```
 
-### Color Minimizer
+### Color MinimizeBtn
 ```lua
 Red
 ```
@@ -189,6 +189,9 @@ local Dropdown = Tab:Dropdown({
         print("Category selected: " .. option) 
     end
 })
+```
+```lua
+Dropdown:Refresh({ "New Category A", "New Category B" })
 ```
 
 #### Input
