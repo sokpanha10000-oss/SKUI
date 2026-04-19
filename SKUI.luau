@@ -1,7 +1,7 @@
 --[[
 ╔══════════════════════════════════════════════════════════════════╗
-║                  ftgs UI Library  v3.2.5                         ║
-║  Built-in Icons · Key System · Themes · Resizable               ║
+║                  ftgs UI Library  v3.3                           ║
+║  Built-in Icons · Key System · Themes · Resizable · Refresh     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
 ║  Icons are now BUILT-IN — no separate IconModule load needed!    ║
@@ -88,10 +88,30 @@
 ║                                                                  ║
 ║  local Sld = Tab1:Slider({ Title="Speed", Desc="Walk speed",     ║
 ║      Step=1, Value={Min=0,Max=100,Default=50},                   ║
+║      Locked=false,   -- optional: locks value from user input    ║
 ║      Callback=function(v) end })                                 ║
-║  Sld:SetValue(75)  |  Sld:GetValue()                             ║
+║  Sld:SetValue(75)    Sld:GetValue()                              ║
+║  Sld:SetLocked(true) Sld:SetLocked(false)                        ║
 ║                                                                  ║
-║  -- Input: Icon (left of title) + InputIcon (inside box)  ✅     ║
+║  -- :Refresh() works on ALL elements  ✅                         ║
+║  DD:Refresh({ "New Category A", "New Category B" })              ║
+║  Tog:Refresh({ Value=true, Title="New Title" })                  ║
+║  Btn:Refresh({ Title="New", Desc="New desc", Locked=false })     ║
+║  Sld:Refresh({ Min=0, Max=200, Default=100 })                    ║
+║                                                                  ║
+║  -- Key System: two-column card (Thumbnail left, form right)     ║
+║  -- Copy URL button appears in middle when URL is set            ║
+║  -- Standalone usage:                                            ║
+║  WindUI:ShowKeySystem({                                          ║
+║      KeySystem = { Key={"abc"}, Title="Key", URL="...",          ║
+║                   Note="Get key on discord.",                    ║
+║                   Thumbnail={Image="rbxassetid://",Title="Hub"}, ║
+║                   SaveKey=true },                                ║
+║      Folder = "MyHub",                                           ║
+║  }, function() print("success") end,                             ║
+║     function() print("cancel") end )                             ║
+║                                                                  ║
+║  -- Resizable=true shows visible drag bars on right + bottom     ║
 ║  local Inp = Tab1:Input({                                        ║
 ║      Title       = "Player Name",                                ║
 ║      Desc        = "Target player",                              ║
@@ -634,158 +654,281 @@ local function OpenDropdown(T,title,values,curVal,onSelect)
 end
 
 -- ═══════════════════════════════════════════════
---  KEY SYSTEM
+--  KEY SYSTEM  v2  (two-column card)
+--  Left  : Thumbnail image fills sidebar
+--  Right : Title · Note · Key input
+--  Bottom: [Cancel] [📋 Copy URL] [Submit Key]
 -- ═══════════════════════════════════════════════
-local function ShowKeySystem(config,T,onSuccess,onCancel)
-    local ks=config.KeySystem; local folder=config.Folder or "ftgsUI"
+local function ShowKeySystem(config, T, onSuccess, onCancel)
+    local ks     = config.KeySystem or {}
+    local folder = config.Folder or "ftgsUI"
+
+    -- Check saved key first
     if ks.SaveKey then
-        FSFolder(folder); local saved=FSRead(folder.."/key.txt")
+        FSFolder(folder)
+        local saved = FSRead(folder .. "/key.txt")
         if saved then
-            for _,k in ipairs(ks.Key or {}) do
-                if saved:gsub("%s+","")== k then task.defer(onSuccess); return end
+            for _, k in ipairs(ks.Key or {}) do
+                if saved:gsub("%s+", "") == k then task.defer(onSuccess); return end
             end
         end
     end
 
-    local Dim=Instance.new("Frame"); Dim.Name="KeyDim"
-    Dim.Size=UDim2.fromScale(1,1); Dim.BackgroundColor3=Color3.new(0,0,0)
-    Dim.BackgroundTransparency=1; Dim.BorderSizePixel=0; Dim.ZIndex=700; Dim.Parent=ScreenGui
+    -- ── Dim overlay ──────────────────────────────
+    local Dim = Instance.new("Frame"); Dim.Name = "KeyDim"
+    Dim.Size = UDim2.fromScale(1,1); Dim.BackgroundColor3 = Color3.new(0,0,0)
+    Dim.BackgroundTransparency = 1; Dim.BorderSizePixel = 0
+    Dim.ZIndex = 700; Dim.Parent = ScreenGui
 
-    local CARD_W=346; local yPos=0
-    local Card=Instance.new("Frame"); Card.Name="KeyCard"
-    Card.Size=UDim2.new(0,CARD_W,0,0); Card.AnchorPoint=Vector2.new(0.5,0.5)
-    Card.Position=UDim2.fromScale(0.5,0.5); Card.BackgroundColor3=T.Bg
-    Card.BorderSizePixel=0; Card.ZIndex=701; Card.ClipsDescendants=true; Card.Parent=Dim
-    Corner(Card,16); NewStroke(Card,T.BorderHi,1); Shadow(Card,0.42)
+    -- ── Card ─────────────────────────────────────
+    local CARD_W  = 580
+    local SIDE_W  = 190   -- left thumbnail column
+    local CONT_W  = CARD_W - SIDE_W  -- right form column
+    local BTN_H   = 44    -- bottom button bar height
+    local FORM_H  = 230   -- right column inner height
+    local CARD_H  = FORM_H + BTN_H + 24  -- total visible height
 
-    local function Put(inst,h,gap) yPos=yPos+(gap or 0); inst.Position=UDim2.new(0,0,0,yPos); inst.Size=UDim2.new(1,0,0,h); inst.Parent=Card; yPos=yPos+h end
-    local function PutP(inst,h,gap,pl,pr) pl=pl or 20; pr=pr or 20; yPos=yPos+(gap or 0); inst.Position=UDim2.new(0,pl,0,yPos); inst.Size=UDim2.new(1,-(pl+pr),0,h); inst.Parent=Card; yPos=yPos+h end
+    local Card = Instance.new("Frame"); Card.Name = "KeyCard"
+    Card.Size = UDim2.new(0, CARD_W, 0, 0)
+    Card.AnchorPoint = Vector2.new(0.5, 0.5)
+    Card.Position = UDim2.fromScale(0.5, 0.5)
+    Card.BackgroundColor3 = T.Secondary
+    Card.BorderSizePixel = 0; Card.ZIndex = 701
+    Card.ClipsDescendants = true; Card.Parent = Dim
+    Corner(Card, 16); NewStroke(Card, T.BorderHi, 1); Shadow(Card, 0.42)
 
-    -- Thumbnail
-    if ks.Thumbnail then
-        local TB=Instance.new("Frame"); TB.BackgroundColor3=T.Secondary; TB.BorderSizePixel=0; TB.ZIndex=702
-        Put(TB,118)
-        if ks.Thumbnail.Image and ks.Thumbnail.Image~="" and ks.Thumbnail.Image~="rbxassetid://" then
-            local IL=Instance.new("ImageLabel"); IL.Size=UDim2.fromScale(1,1); IL.BackgroundTransparency=1
-            IL.Image=ks.Thumbnail.Image; IL.ScaleType=Enum.ScaleType.Crop; IL.ImageTransparency=0.06
-            IL.ZIndex=703; IL.Parent=TB; Corner(IL,16)
-        end
-        local TDim=Instance.new("Frame"); TDim.Size=UDim2.fromScale(1,1)
-        TDim.BackgroundColor3=Color3.new(0,0,0); TDim.BackgroundTransparency=0.52
-        TDim.BorderSizePixel=0; TDim.ZIndex=703; TDim.Parent=TB
-        if ks.Thumbnail.Title and ks.Thumbnail.Title~="" then
-            local TL=Instance.new("TextLabel"); TL.Size=UDim2.new(1,-24,0,22); TL.Position=UDim2.new(0,12,1,-32)
-            TL.BackgroundTransparency=1; TL.Text=ks.Thumbnail.Title
-            TL.TextColor3=Color3.fromRGB(255,255,255); TL.Font=Enum.Font.GothamBold
-            TL.TextSize=14; TL.TextXAlignment=Enum.TextXAlignment.Left; TL.ZIndex=704; TL.Parent=TB
-        end
+    -- ── Left sidebar (thumbnail) ──────────────────
+    local LeftPanel = Instance.new("Frame"); LeftPanel.Name = "ThumbPanel"
+    LeftPanel.Size = UDim2.new(0, SIDE_W, 1, -BTN_H)
+    LeftPanel.Position = UDim2.new(0, 0, 0, 0)
+    LeftPanel.BackgroundColor3 = T.Tertiary
+    LeftPanel.BorderSizePixel = 0; LeftPanel.ZIndex = 702
+    LeftPanel.ClipsDescendants = true; LeftPanel.Parent = Card
+    -- round only top-left corner
+    local LPC = Instance.new("UICorner"); LPC.CornerRadius = UDim.new(0,16); LPC.Parent = LeftPanel
+    -- fix: square the right side corners via an overlap frame
+    local LPFix = Instance.new("Frame"); LPFix.Size = UDim2.new(0,16,1,0)
+    LPFix.Position = UDim2.new(1,-16,0,0); LPFix.BackgroundColor3 = T.Tertiary
+    LPFix.BorderSizePixel = 0; LPFix.ZIndex = 702; LPFix.Parent = LeftPanel
+
+    local hasThumb = ks.Thumbnail and ks.Thumbnail.Image
+        and ks.Thumbnail.Image ~= "" and ks.Thumbnail.Image ~= "rbxassetid://"
+    if hasThumb then
+        local TImg = Instance.new("ImageLabel"); TImg.Size = UDim2.fromScale(1,1)
+        TImg.BackgroundTransparency = 1; TImg.Image = ks.Thumbnail.Image
+        TImg.ScaleType = Enum.ScaleType.Crop; TImg.ImageTransparency = 0.04
+        TImg.ZIndex = 703; TImg.Parent = LeftPanel
     end
+    -- Gradient overlay bottom-up
+    local TGradFrame = Instance.new("Frame"); TGradFrame.Size = UDim2.new(1,0,0.55,0)
+    TGradFrame.Position = UDim2.new(0,0,0.45,0)
+    TGradFrame.BackgroundColor3 = T.Bg; TGradFrame.BorderSizePixel = 0
+    TGradFrame.ZIndex = 703; TGradFrame.Parent = LeftPanel
+    local TGrad = Instance.new("UIGradient"); TGrad.Rotation = 90
+    TGrad.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.45, 0.6),
+        NumberSequenceKeypoint.new(1, 1),
+    }); TGrad.Parent = TGradFrame
+
+    -- Thumbnail title at bottom
+    if ks.Thumbnail and ks.Thumbnail.Title and ks.Thumbnail.Title ~= "" then
+        local TTL = Instance.new("TextLabel")
+        TTL.Size = UDim2.new(1,-16,0,36); TTL.Position = UDim2.new(0,10,1,-46)
+        TTL.BackgroundTransparency = 1; TTL.Text = ks.Thumbnail.Title
+        TTL.TextColor3 = T.Text; TTL.Font = Enum.Font.GothamBold; TTL.TextSize = 13
+        TTL.TextXAlignment = Enum.TextXAlignment.Left; TTL.TextWrapped = true
+        TTL.ZIndex = 704; TTL.Parent = LeftPanel
+    end
+
+    -- Hub icon pill at top-left
+    local KPill = Instance.new("Frame"); KPill.Size = UDim2.new(0,4,0,32)
+    KPill.Position = UDim2.new(0,14,0,14); KPill.BackgroundColor3 = T.Accent
+    KPill.BorderSizePixel = 0; KPill.ZIndex = 704; KPill.Parent = LeftPanel; Corner(KPill,2)
+
+    -- Divider between columns
+    local ColDiv = Instance.new("Frame"); ColDiv.Size = UDim2.new(0,1,1,-BTN_H)
+    ColDiv.Position = UDim2.new(0,SIDE_W,0,0)
+    ColDiv.BackgroundColor3 = T.Border; ColDiv.BorderSizePixel = 0
+    ColDiv.ZIndex = 702; ColDiv.Parent = Card
+
+    -- ── Right form panel ─────────────────────────
+    local RightPanel = Instance.new("Frame"); RightPanel.Name = "FormPanel"
+    RightPanel.Size = UDim2.new(0, CONT_W, 1, -BTN_H)
+    RightPanel.Position = UDim2.new(0, SIDE_W+1, 0, 0)
+    RightPanel.BackgroundTransparency = 1
+    RightPanel.BorderSizePixel = 0; RightPanel.ZIndex = 702; RightPanel.Parent = Card
+
+    local ry = 20  -- running Y inside right panel
 
     -- Title
-    local TitleLbl=Instance.new("TextLabel"); TitleLbl.BackgroundTransparency=1
-    TitleLbl.Text=ks.Title or "Key System"; TitleLbl.TextColor3=T.Text
-    TitleLbl.Font=Enum.Font.GothamBold; TitleLbl.TextSize=17
-    TitleLbl.TextXAlignment=Enum.TextXAlignment.Left; TitleLbl.ZIndex=702
-    PutP(TitleLbl,24,20)
+    local KTitle = Instance.new("TextLabel")
+    KTitle.Size = UDim2.new(1,-28,0,22); KTitle.Position = UDim2.new(0,16,0,ry)
+    KTitle.BackgroundTransparency = 1; KTitle.Text = ks.Title or "Key System"
+    KTitle.TextColor3 = T.Text; KTitle.Font = Enum.Font.GothamBold; KTitle.TextSize = 17
+    KTitle.TextXAlignment = Enum.TextXAlignment.Left; KTitle.ZIndex = 703; KTitle.Parent = RightPanel
+    ry = ry + 22 + 10
 
-    local Div=Instance.new("Frame"); Div.BackgroundColor3=T.Border; Div.BorderSizePixel=0; Div.ZIndex=702
-    PutP(Div,1,8)
+    -- Divider
+    local FDiv = Instance.new("Frame"); FDiv.Size = UDim2.new(1,-32,0,1)
+    FDiv.Position = UDim2.new(0,16,0,ry); FDiv.BackgroundColor3 = T.Border
+    FDiv.BorderSizePixel = 0; FDiv.ZIndex = 703; FDiv.Parent = RightPanel
+    ry = ry + 1 + 14
 
     -- Note
-    if ks.Note and ks.Note~="" then
-        local NL=Instance.new("TextLabel"); NL.BackgroundTransparency=1; NL.Text=ks.Note
-        NL.TextColor3=T.SubText; NL.Font=Enum.Font.Gotham; NL.TextSize=12
-        NL.TextXAlignment=Enum.TextXAlignment.Left; NL.TextWrapped=true; NL.ZIndex=702
-        PutP(NL,36,12)
+    if ks.Note and ks.Note ~= "" then
+        local KNote = Instance.new("TextLabel")
+        KNote.Size = UDim2.new(1,-32,0,52); KNote.Position = UDim2.new(0,16,0,ry)
+        KNote.BackgroundTransparency = 1; KNote.Text = ks.Note
+        KNote.TextColor3 = T.SubText; KNote.Font = Enum.Font.Gotham; KNote.TextSize = 12
+        KNote.TextXAlignment = Enum.TextXAlignment.Left
+        KNote.TextWrapped = true; KNote.ZIndex = 703; KNote.Parent = RightPanel
+        ry = ry + 52 + 10
     end
 
-    -- Input
-    local IBg=Instance.new("Frame"); IBg.BackgroundColor3=T.Tertiary; IBg.BorderSizePixel=0; IBg.ZIndex=702
-    PutP(IBg,38,14)
-    Corner(IBg,8); local iStr=NewStroke(IBg,T.Border)
+    -- Key input box
+    local IBg = Instance.new("Frame"); IBg.Size = UDim2.new(1,-32,0,38)
+    IBg.Position = UDim2.new(0,16,0,ry)
+    IBg.BackgroundColor3 = T.Tertiary; IBg.BorderSizePixel = 0
+    IBg.ZIndex = 703; IBg.Parent = RightPanel; Corner(IBg,9)
+    local iStr = NewStroke(IBg, T.Border)
+    ry = ry + 38 + 8
 
-    local KB=Instance.new("TextBox"); KB.Size=UDim2.new(1,-42,1,-8); KB.Position=UDim2.new(0,10,0,4)
-    KB.BackgroundTransparency=1; KB.Text=""; KB.PlaceholderText="Enter your key here..."
-    KB.PlaceholderColor3=T.SubText; KB.TextColor3=T.Text; KB.Font=Enum.Font.Gotham; KB.TextSize=13
-    KB.TextXAlignment=Enum.TextXAlignment.Left; KB.ClearTextOnFocus=false; KB.BorderSizePixel=0
-    KB.ZIndex=703; KB.Parent=IBg
+    local KB = Instance.new("TextBox")
+    KB.Size = UDim2.new(1,-44,1,-8); KB.Position = UDim2.new(0,12,0,4)
+    KB.BackgroundTransparency = 1; KB.Text = ""
+    KB.PlaceholderText = "Enter your key here..."
+    KB.PlaceholderColor3 = T.SubText; KB.TextColor3 = T.Text
+    KB.Font = Enum.Font.Gotham; KB.TextSize = 13
+    KB.TextXAlignment = Enum.TextXAlignment.Left
+    KB.ClearTextOnFocus = false; KB.BorderSizePixel = 0
+    KB.ZIndex = 704; KB.Parent = IBg
 
-    local EyeBtn=Instance.new("TextButton"); EyeBtn.Size=UDim2.new(0,30,0,30)
-    EyeBtn.Position=UDim2.new(1,-33,0.5,-15); EyeBtn.BackgroundTransparency=1; EyeBtn.Text="◉"
-    EyeBtn.TextColor3=T.SubText; EyeBtn.Font=Enum.Font.GothamBold; EyeBtn.TextSize=15
-    EyeBtn.ZIndex=703; EyeBtn.Parent=IBg
+    local EyeBtn = Instance.new("TextButton"); EyeBtn.Size = UDim2.new(0,30,0,30)
+    EyeBtn.Position = UDim2.new(1,-34,0.5,-15); EyeBtn.BackgroundTransparency = 1
+    EyeBtn.Text = "◉"; EyeBtn.TextColor3 = T.SubText
+    EyeBtn.Font = Enum.Font.GothamBold; EyeBtn.TextSize = 16
+    EyeBtn.ZIndex = 704; EyeBtn.Parent = IBg
 
-    KB.Focused:Connect(function() Tween(iStr,TweenInfo.new(0.14),{Color=T.Accent}); Tween(IBg,TweenInfo.new(0.14),{BackgroundColor3=T.BorderHi}) end)
-    KB.FocusLost:Connect(function() Tween(iStr,TweenInfo.new(0.14),{Color=T.Border}); Tween(IBg,TweenInfo.new(0.14),{BackgroundColor3=T.Tertiary}) end)
+    KB.Focused:Connect(function()
+        Tween(iStr,TweenInfo.new(0.14),{Color=T.Accent})
+        Tween(IBg, TweenInfo.new(0.14),{BackgroundColor3=T.BorderHi})
+    end)
+    KB.FocusLost:Connect(function()
+        Tween(iStr,TweenInfo.new(0.14),{Color=T.Border})
+        Tween(IBg, TweenInfo.new(0.14),{BackgroundColor3=T.Tertiary})
+    end)
     EyeBtn.MouseButton1Click:Connect(function()
-        if EyeBtn.Text=="◉" then EyeBtn.Text="⊘"; EyeBtn.TextColor3=T.Accent
-        else EyeBtn.Text="◉"; EyeBtn.TextColor3=T.SubText end
+        if EyeBtn.Text == "◉" then EyeBtn.Text = "⊘"; EyeBtn.TextColor3 = T.Accent
+        else EyeBtn.Text = "◉"; EyeBtn.TextColor3 = T.SubText end
     end)
 
-    -- Error label
-    local ErrLbl=Instance.new("TextLabel"); ErrLbl.BackgroundTransparency=1; ErrLbl.Text=""
-    ErrLbl.TextColor3=T.Danger; ErrLbl.Font=Enum.Font.Gotham; ErrLbl.TextSize=11
-    ErrLbl.TextXAlignment=Enum.TextXAlignment.Left; ErrLbl.ZIndex=702
-    PutP(ErrLbl,16,6)
+    -- Error label (inside right panel, below input)
+    local ErrLbl = Instance.new("TextLabel")
+    ErrLbl.Size = UDim2.new(1,-32,0,14); ErrLbl.Position = UDim2.new(0,16,0,ry)
+    ErrLbl.BackgroundTransparency = 1; ErrLbl.Text = ""
+    ErrLbl.TextColor3 = T.Danger; ErrLbl.Font = Enum.Font.Gotham; ErrLbl.TextSize = 11
+    ErrLbl.TextXAlignment = Enum.TextXAlignment.Left
+    ErrLbl.ZIndex = 703; ErrLbl.Parent = RightPanel
 
-    -- Cancel + Submit row
-    local BRow=Instance.new("Frame"); BRow.BackgroundTransparency=1; BRow.BorderSizePixel=0; BRow.ZIndex=702
-    PutP(BRow,38,6)
+    -- ── Bottom bar (full width) ───────────────────
+    local BotBar = Instance.new("Frame"); BotBar.Name = "BotBar"
+    BotBar.Size = UDim2.new(1,0,0,BTN_H)
+    BotBar.Position = UDim2.new(0,0,1,-BTN_H)
+    BotBar.BackgroundColor3 = T.Tertiary
+    BotBar.BorderSizePixel = 0; BotBar.ZIndex = 702; BotBar.Parent = Card
+    -- Fix corner rounding (only bottom corners)
+    local BBFix = Instance.new("Frame"); BBFix.Size = UDim2.new(1,0,0,16)
+    BBFix.BackgroundColor3 = T.Tertiary; BBFix.BorderSizePixel = 0
+    BBFix.ZIndex = 702; BBFix.Parent = BotBar
+    local BBDiv = Instance.new("Frame"); BBDiv.Size = UDim2.new(1,0,0,1)
+    BBDiv.BackgroundColor3 = T.Border; BBDiv.BorderSizePixel = 0
+    BBDiv.ZIndex = 703; BBDiv.Parent = BotBar
 
-    local CancelBtn=Instance.new("TextButton"); CancelBtn.Size=UDim2.new(0.44,0,1,0)
-    CancelBtn.BackgroundColor3=T.Tertiary; CancelBtn.Text="Cancel"; CancelBtn.TextColor3=T.SubText
-    CancelBtn.Font=Enum.Font.GothamBold; CancelBtn.TextSize=13; CancelBtn.BorderSizePixel=0
-    CancelBtn.ZIndex=703; CancelBtn.Parent=BRow; Corner(CancelBtn,8); NewStroke(CancelBtn,T.Border)
+    local hasURL = ks.URL and ks.URL ~= "" and not ks.URL:find("YOUR LINK")
+    -- Three buttons: Cancel | Copy (if URL) | Submit
+    -- Widths distribute evenly
+    local totalBtns = hasURL and 3 or 2
+    local PAD = 14
+    local btnW = (CARD_W - PAD*(totalBtns+1)) / totalBtns
+    local bx = PAD
 
-    local SubmitBtn=Instance.new("TextButton"); SubmitBtn.Size=UDim2.new(0.52,0,1,0); SubmitBtn.Position=UDim2.new(0.48,0,0,0)
-    SubmitBtn.BackgroundColor3=T.Accent; SubmitBtn.Text="Submit Key"; SubmitBtn.TextColor3=T.Text
-    SubmitBtn.Font=Enum.Font.GothamBold; SubmitBtn.TextSize=13; SubmitBtn.BorderSizePixel=0
-    SubmitBtn.ZIndex=703; SubmitBtn.Parent=BRow; Corner(SubmitBtn,8)
-
-    -- Get Key button
-    if ks.URL and ks.URL~="" and not ks.URL:find("YOUR LINK") then
-        local GBtn=Instance.new("TextButton"); GBtn.BackgroundColor3=T.Bg
-        GBtn.Text="🔗  Get Key"; GBtn.TextColor3=T.Accent
-        GBtn.Font=Enum.Font.GothamBold; GBtn.TextSize=12; GBtn.BorderSizePixel=0; GBtn.ZIndex=702
-        PutP(GBtn,32,10); Corner(GBtn,7); NewStroke(GBtn,T.Accent)
-        GBtn.MouseEnter:Connect(function() Tween(GBtn,TweenInfo.new(0.12),{BackgroundColor3=T.Accent,TextColor3=T.Text}) end)
-        GBtn.MouseLeave:Connect(function() Tween(GBtn,TweenInfo.new(0.12),{BackgroundColor3=T.Bg,TextColor3=T.Accent}) end)
-        GBtn.MouseButton1Click:Connect(function() pcall(function() if setclipboard then setclipboard(ks.URL) end end) end)
+    local function MakeBtn(x, w, bgCol, textCol, txt, stroke)
+        local b = Instance.new("TextButton"); b.Size = UDim2.new(0,w,0,28)
+        b.Position = UDim2.new(0,x,0.5,-14)
+        b.BackgroundColor3 = bgCol; b.Text = txt; b.TextColor3 = textCol
+        b.Font = Enum.Font.GothamBold; b.TextSize = 13; b.BorderSizePixel = 0
+        b.ZIndex = 703; b.Parent = BotBar; Corner(b,8)
+        if stroke then NewStroke(b,stroke,1) end
+        return b
     end
 
-    yPos=yPos+20
-    Card.Size=UDim2.new(0,CARD_W,0,0)
-    Tween(Dim,TweenInfo.new(0.22),{BackgroundTransparency=0.42})
-    Tween(Card,TweenInfo.new(0.32,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,CARD_W,0,yPos)})
+    local CancelBtn = MakeBtn(bx, btnW, T.Secondary, T.SubText, "Cancel", T.Border)
+    bx = bx + btnW + PAD
 
-    CancelBtn.MouseEnter:Connect(function() Tween(CancelBtn,TweenInfo.new(0.12),{BackgroundColor3=T.BorderHi,TextColor3=T.Text}) end)
-    CancelBtn.MouseLeave:Connect(function() Tween(CancelBtn,TweenInfo.new(0.12),{BackgroundColor3=T.Tertiary,TextColor3=T.SubText}) end)
-    SubmitBtn.MouseEnter:Connect(function() Tween(SubmitBtn,TweenInfo.new(0.12),{BackgroundColor3=T.AccentHov}) end)
-    SubmitBtn.MouseLeave:Connect(function() Tween(SubmitBtn,TweenInfo.new(0.12),{BackgroundColor3=T.Accent}) end)
+    local CopyBtn = nil
+    if hasURL then
+        CopyBtn = MakeBtn(bx, btnW, T.Secondary, T.Accent, "📋  Copy URL", T.Accent)
+        bx = bx + btnW + PAD
+        local copying = false
+        CopyBtn.MouseButton1Click:Connect(function()
+            if copying then return end; copying = true
+            pcall(function() if setclipboard then setclipboard(ks.URL) end end)
+            CopyBtn.Text = "✓  Copied!"
+            Tween(CopyBtn,TweenInfo.new(0.15),{BackgroundColor3=T.Success,TextColor3=T.Text})
+            task.delay(1.6,function()
+                copying = false
+                CopyBtn.Text = "📋  Copy URL"
+                Tween(CopyBtn,TweenInfo.new(0.2),{BackgroundColor3=T.Secondary,TextColor3=T.Accent})
+            end)
+        end)
+        CopyBtn.MouseEnter:Connect(function() if not copying then Tween(CopyBtn,TweenInfo.new(0.1),{BackgroundColor3=T.BorderHi}) end end)
+        CopyBtn.MouseLeave:Connect(function() if not copying then Tween(CopyBtn,TweenInfo.new(0.1),{BackgroundColor3=T.Secondary}) end end)
+    end
 
+    local SubmitBtn = MakeBtn(bx, btnW, T.Accent, T.Text, "Submit Key", nil)
+
+    -- Hover effects for Cancel and Submit
+    CancelBtn.MouseEnter:Connect(function() Tween(CancelBtn,TweenInfo.new(0.1),{BackgroundColor3=T.BorderHi,TextColor3=T.Text}) end)
+    CancelBtn.MouseLeave:Connect(function() Tween(CancelBtn,TweenInfo.new(0.1),{BackgroundColor3=T.Secondary,TextColor3=T.SubText}) end)
+    SubmitBtn.MouseEnter:Connect(function() Tween(SubmitBtn,TweenInfo.new(0.1),{BackgroundColor3=T.AccentHov}) end)
+    SubmitBtn.MouseLeave:Connect(function() Tween(SubmitBtn,TweenInfo.new(0.1),{BackgroundColor3=T.Accent}) end)
+
+    -- ── Animate in ───────────────────────────────
+    local targetH = CARD_H
+    Card.Size = UDim2.new(0,CARD_W,0,0)
+    Tween(Dim,  TweenInfo.new(0.22), {BackgroundTransparency=0.44})
+    Tween(Card, TweenInfo.new(0.32,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
+        {Size=UDim2.new(0,CARD_W,0,targetH)})
+
+    -- ── Close helper ─────────────────────────────
     local function CloseCard(cb)
-        Tween(Dim,TweenInfo.new(0.18),{BackgroundTransparency=1})
-        Tween(Card,TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.In),{Size=UDim2.new(0,CARD_W,0,0)})
-        task.delay(0.22,function() Dim:Destroy(); if cb then cb() end end)
+        Tween(Dim,  TweenInfo.new(0.18), {BackgroundTransparency=1})
+        Tween(Card, TweenInfo.new(0.18,Enum.EasingStyle.Quad,Enum.EasingDirection.In),
+            {Size=UDim2.new(0,CARD_W,0,0)})
+        task.delay(0.22, function() Dim:Destroy(); if cb then cb() end end)
     end
 
+    -- ── Validation ───────────────────────────────
     local function Validate(raw)
-        local k=raw:gsub("%s+","")
-        for _,v in ipairs(ks.Key or {}) do if k==v then return true end end
+        local k = raw:gsub("%s+","")
+        for _, v in ipairs(ks.Key or {}) do if k == v then return true end end
         return false
     end
 
     local function OnSubmit()
-        local raw=KB.Text
-        if raw=="" then ErrLbl.Text="⚠  Please enter your key."; return end
+        local raw = KB.Text
+        if raw == "" then ErrLbl.Text = "⚠  Please enter your key."; return end
         if Validate(raw) then
-            ErrLbl.Text=""
-            SubmitBtn.Text="✓  Access Granted"
+            ErrLbl.Text = ""
+            SubmitBtn.Text = "✓  Access Granted"
             Tween(SubmitBtn,TweenInfo.new(0.2),{BackgroundColor3=T.Success})
-            if ks.SaveKey then FSFolder(folder); FSWrite(folder.."/key.txt",raw:gsub("%s+","")) end
-            task.delay(0.85,function() CloseCard(onSuccess) end)
+            if ks.SaveKey then
+                FSFolder(folder); FSWrite(folder.."/key.txt", raw:gsub("%s+",""))
+            end
+            task.delay(0.85, function() CloseCard(onSuccess) end)
         else
-            ErrLbl.Text="✕  Incorrect key. Please try again."
+            ErrLbl.Text = "✕  Incorrect key — please try again."
             Tween(IBg,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(55,18,18)})
             task.delay(0.65,function() Tween(IBg,TweenInfo.new(0.2),{BackgroundColor3=T.Tertiary}) end)
         end
@@ -817,6 +960,15 @@ end
 -- Expose AddIcons from the built-in module for custom icon packs.
 function Library:AddIcons(packName, iconsData)
     IconModule.AddIcons(packName, iconsData)
+end
+
+-- Show the Key System card independently (without CreateWindow).
+-- WindUI:ShowKeySystem(config, onSuccess, onCancel)
+-- config must contain { KeySystem={...}, Folder="..." }
+-- Theme defaults to Dark when called standalone.
+function Library:ShowKeySystem(config, onSuccess, onCancel)
+    local T = Themes[(config and config.Theme) or "Dark"] or Themes.Dark
+    ShowKeySystem(config or {}, T, onSuccess or function() end, onCancel or function() end)
 end
 
 -- ────────────────────────────────────────────────
@@ -913,28 +1065,94 @@ function Library:CreateWindow(config)
 
     -- ── Resizable ────────────────────────────────
     if config.Resizable then
-        local function ResizeEdge(sz,pos,rW,rH)
-            local e=Instance.new("Frame"); e.Size=sz; e.Position=pos
-            e.BackgroundTransparency=1; e.BorderSizePixel=0; e.ZIndex=10; e.Parent=Main
-            local drg,sP,sS=false
+        -- Generic invisible edge helper (still used for corner)
+        local function ResizeEdge(sz, pos, rW, rH, cursor)
+            local e = Instance.new("Frame"); e.Size = sz; e.Position = pos
+            e.BackgroundTransparency = 1; e.BorderSizePixel = 0; e.ZIndex = 12; e.Parent = Main
+            local drg, sP, sS = false
             e.InputBegan:Connect(function(i)
-                if i.UserInputType==Enum.UserInputType.MouseButton1 then
-                    drg=true; sP=i.Position; sS=Main.AbsoluteSize
-                    i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then drg=false end end)
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                    drg = true; sP = i.Position; sS = Main.AbsoluteSize
+                    i.Changed:Connect(function()
+                        if i.UserInputState == Enum.UserInputState.End then drg = false end
+                    end)
                 end
             end)
             UserInputService.InputChanged:Connect(function(i)
-                if drg and i.UserInputType==Enum.UserInputType.MouseMovement then
-                    local d=i.Position-sP
-                    local nw=rW and math.clamp(sS.X+d.X,MINW,MAXW) or sS.X
-                    local nh=rH and math.clamp(sS.Y+d.Y,MINH,MAXH) or sS.Y
-                    Main.Size=UDim2.fromOffset(nw,nh)
+                if drg and i.UserInputType == Enum.UserInputType.MouseMovement then
+                    local d = i.Position - sP
+                    local nw = rW and math.clamp(sS.X + d.X, MINW, MAXW) or sS.X
+                    local nh = rH and math.clamp(sS.Y + d.Y, MINH, MAXH) or sS.Y
+                    Main.Size = UDim2.fromOffset(nw, nh)
                 end
             end)
+            return e
         end
-        ResizeEdge(UDim2.new(0,6,1,-46),UDim2.new(1,-6,0,46),true,false)
-        ResizeEdge(UDim2.new(1,-6,0,6), UDim2.new(0,0,1,-6), false,true)
-        ResizeEdge(UDim2.new(0,12,0,12),UDim2.new(1,-12,1,-12),true,true)
+
+        -- ── Visible right resize bar ──────────────
+        local RBar = Instance.new("Frame"); RBar.Name = "ResizeBarRight"
+        RBar.Size = UDim2.new(0, 5, 1, -60); RBar.Position = UDim2.new(1, -5, 0, 52)
+        RBar.BackgroundColor3 = T.Border; RBar.BorderSizePixel = 0; RBar.ZIndex = 11
+        RBar.Parent = Main; Corner(RBar, 3)
+
+        local RBarHit = Instance.new("TextButton"); RBarHit.Size = UDim2.new(0, 14, 1, 0)
+        RBarHit.Position = UDim2.new(0, -4, 0, 0); RBarHit.BackgroundTransparency = 1
+        RBarHit.Text = ""; RBarHit.ZIndex = 12; RBarHit.Parent = RBar
+        local rdrag, rsP, rsS = false
+        RBarHit.MouseEnter:Connect(function() Tween(RBar,TweenInfo.new(0.12),{BackgroundColor3=T.Accent}) end)
+        RBarHit.MouseLeave:Connect(function() if not rdrag then Tween(RBar,TweenInfo.new(0.12),{BackgroundColor3=T.Border}) end end)
+        RBarHit.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                rdrag = true; rsP = i.Position; rsS = Main.AbsoluteSize
+                Tween(RBar,TweenInfo.new(0.08),{BackgroundColor3=T.AccentHov})
+                i.Changed:Connect(function()
+                    if i.UserInputState == Enum.UserInputState.End then
+                        rdrag = false; Tween(RBar,TweenInfo.new(0.12),{BackgroundColor3=T.Border})
+                    end
+                end)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(i)
+            if rdrag and i.UserInputType == Enum.UserInputType.MouseMovement then
+                local d = i.Position - rsP
+                local nw = math.clamp(rsS.X + d.X, MINW, MAXW)
+                Main.Size = UDim2.fromOffset(nw, Main.AbsoluteSize.Y)
+            end
+        end)
+
+        -- ── Visible bottom resize bar ─────────────
+        local BBar = Instance.new("Frame"); BBar.Name = "ResizeBarBottom"
+        BBar.Size = UDim2.new(1, -16, 0, 5); BBar.Position = UDim2.new(0, 8, 1, -5)
+        BBar.BackgroundColor3 = T.Border; BBar.BorderSizePixel = 0; BBar.ZIndex = 11
+        BBar.Parent = Main; Corner(BBar, 3)
+
+        local BBarHit = Instance.new("TextButton"); BBarHit.Size = UDim2.new(1, 0, 0, 14)
+        BBarHit.Position = UDim2.new(0, 0, 0, -4); BBarHit.BackgroundTransparency = 1
+        BBarHit.Text = ""; BBarHit.ZIndex = 12; BBarHit.Parent = BBar
+        local bdrag, bsP, bsS = false
+        BBarHit.MouseEnter:Connect(function() Tween(BBar,TweenInfo.new(0.12),{BackgroundColor3=T.Accent}) end)
+        BBarHit.MouseLeave:Connect(function() if not bdrag then Tween(BBar,TweenInfo.new(0.12),{BackgroundColor3=T.Border}) end end)
+        BBarHit.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                bdrag = true; bsP = i.Position; bsS = Main.AbsoluteSize
+                Tween(BBar,TweenInfo.new(0.08),{BackgroundColor3=T.AccentHov})
+                i.Changed:Connect(function()
+                    if i.UserInputState == Enum.UserInputState.End then
+                        bdrag = false; Tween(BBar,TweenInfo.new(0.12),{BackgroundColor3=T.Border})
+                    end
+                end)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(i)
+            if bdrag and i.UserInputType == Enum.UserInputType.MouseMovement then
+                local d = i.Position - bsP
+                local nh = math.clamp(bsS.Y + d.Y, MINH, MAXH)
+                Main.Size = UDim2.fromOffset(Main.AbsoluteSize.X, nh)
+            end
+        end)
+
+        -- Corner handle (invisible, for diagonal resize)
+        ResizeEdge(UDim2.new(0,14,0,14), UDim2.new(1,-14,1,-14), true, true)
     end
 
     -- ── Sidebar ──────────────────────────────────
@@ -1259,7 +1477,25 @@ function Library:CreateWindow(config)
                     if cfg.Callback then task.spawn(cfg.Callback) end
                 end)
             end
-            return {SetLocked=function(v) lk=v; Btn.BackgroundColor3=v and T.Border or T.Accent; Btn.Text=v and "🔒" or "Run" end}
+            -- Label refs for Refresh
+            local _titleLbl = e:FindFirstChildWhichIsA("TextLabel")
+            return {
+                SetLocked = function(v) lk=v; Btn.BackgroundColor3=v and T.Border or T.Accent; Btn.Text=v and "🔒" or "Run" end,
+                Refresh   = function(ncfg)
+                    ncfg = ncfg or {}
+                    if ncfg.Title then
+                        for _, c in ipairs(e:GetChildren()) do
+                            if c:IsA("TextLabel") then c.Text = ncfg.Title; break end
+                        end
+                    end
+                    if ncfg.Locked ~= nil then
+                        lk = ncfg.Locked
+                        Btn.BackgroundColor3 = lk and T.Border or T.Accent
+                        Btn.Text = lk and "🔒" or "Run"
+                    end
+                    if ncfg.Callback then cfg.Callback = ncfg.Callback end
+                end,
+            }
         end
 
         -- DROPDOWN
@@ -1281,6 +1517,30 @@ function Library:CreateWindow(config)
                 SetValue  = function(v) cur=v; DBtn.Text=v.."  ▾" end,
                 GetValue  = function() return cur end,
                 SetValues = function(nv) vals=nv; if not table.find(vals,cur) then cur=vals[1] or "None"; DBtn.Text=cur.."  ▾" end end,
+                -- Refresh accepts an array of new values directly:
+                --   DD:Refresh({ "Cat A", "Cat B" })
+                -- or a config table:
+                --   DD:Refresh({ Values={"Cat A"}, Value="Cat A", Title="New" })
+                Refresh   = function(data)
+                    data = data or {}
+                    -- Detect raw array vs config table
+                    local newVals = (type(data[1]) == "string") and data or data.Values
+                    if newVals then
+                        vals = newVals
+                        if not table.find(vals, cur) then
+                            cur = vals[1] or "None"; DBtn.Text = cur.."  ▾"
+                        end
+                    end
+                    if data.Value and table.find(vals, data.Value) then
+                        cur = data.Value; DBtn.Text = cur.."  ▾"
+                    end
+                    if data.Title then
+                        cfg.Title = data.Title
+                        for _, c in ipairs(e:GetChildren()) do
+                            if c:IsA("TextLabel") then c.Text = data.Title; break end
+                        end
+                    end
+                end,
             }
         end
 
@@ -1322,74 +1582,161 @@ function Library:CreateWindow(config)
                     {Position=v and UDim2.new(0,25,0.5,0) or UDim2.new(0,3,0.5,0)})
             end
             Click.MouseButton1Click:Connect(function() Apply(not state); if cfg.Callback then task.spawn(cfg.Callback,state) end end)
-            return {SetValue=Apply, GetValue=function() return state end}
+            return {
+                SetValue = Apply,
+                GetValue = function() return state end,
+                Refresh  = function(ncfg)
+                    ncfg = ncfg or {}
+                    if ncfg.Value ~= nil then Apply(ncfg.Value) end
+                    if ncfg.Title then
+                        for _, c in ipairs(e:GetChildren()) do
+                            if c:IsA("TextLabel") then c.Text = ncfg.Title; break end
+                        end
+                    end
+                    if ncfg.Callback then cfg.Callback = ncfg.Callback end
+                end,
+            }
         end
 
-        -- SLIDER  (RunService.Heartbeat — never locks)
+        -- SLIDER  ✅  (Locked=true freezes value; isolated drag — no accidental slide)
         function Elem:Slider(cfg)
-            cfg=cfg or {}; local vc=cfg.Value or {}
-            local mn=vc.Min or 0; local mx=vc.Max or 100; local def=vc.Default or mn
-            local stp=cfg.Step or 1; local cur=math.clamp(def,mn,mx)
-            local e=NewElem(72)
-            local TL=Instance.new("TextLabel"); TL.Size=UDim2.new(1,-92,0,16); TL.Position=UDim2.new(0,12,0,9)
-            TL.BackgroundTransparency=1; TL.Text=cfg.Title or "Slider"; TL.TextColor3=T.Text
-            TL.Font=Enum.Font.GothamBold; TL.TextSize=13; TL.TextXAlignment=Enum.TextXAlignment.Left; TL.Parent=e
-            local VL=Instance.new("TextLabel"); VL.Size=UDim2.new(0,76,0,16); VL.Position=UDim2.new(1,-86,0,9)
-            VL.BackgroundTransparency=1; VL.Text=tostring(cur); VL.TextColor3=T.Accent
-            VL.Font=Enum.Font.GothamBold; VL.TextSize=13; VL.TextXAlignment=Enum.TextXAlignment.Right; VL.Parent=e
-            if cfg.Desc and cfg.Desc~="" then
-                local DL=Instance.new("TextLabel"); DL.Size=UDim2.new(1,-92,0,13); DL.Position=UDim2.new(0,12,0,28)
-                DL.BackgroundTransparency=1; DL.Text=cfg.Desc; DL.TextColor3=T.SubText
-                DL.Font=Enum.Font.Gotham; DL.TextSize=11; DL.TextXAlignment=Enum.TextXAlignment.Left; DL.Parent=e
+            cfg = cfg or {}; local vc = cfg.Value or {}
+            local mn  = vc.Min or 0; local mx = vc.Max or 100; local def = vc.Default or mn
+            local stp = cfg.Step or 1
+            local cur = math.clamp(def, mn, mx)
+            local isLocked = cfg.Locked == true
+
+            local e = NewElem(72)
+
+            local TL = Instance.new("TextLabel"); TL.Size = UDim2.new(1,-92,0,16); TL.Position = UDim2.new(0,12,0,9)
+            TL.BackgroundTransparency = 1; TL.Text = cfg.Title or "Slider"; TL.TextColor3 = T.Text
+            TL.Font = Enum.Font.GothamBold; TL.TextSize = 13; TL.TextXAlignment = Enum.TextXAlignment.Left; TL.Parent = e
+
+            local VL = Instance.new("TextLabel"); VL.Size = UDim2.new(0,76,0,16); VL.Position = UDim2.new(1,-86,0,9)
+            VL.BackgroundTransparency = 1; VL.Text = tostring(cur); VL.TextColor3 = T.Accent
+            VL.Font = Enum.Font.GothamBold; VL.TextSize = 13; VL.TextXAlignment = Enum.TextXAlignment.Right; VL.Parent = e
+
+            -- Lock icon (shown when locked)
+            local LockLbl = Instance.new("TextLabel"); LockLbl.Size = UDim2.new(0,20,0,16)
+            LockLbl.Position = UDim2.new(1,-108,0,9); LockLbl.BackgroundTransparency = 1
+            LockLbl.Text = "🔒"; LockLbl.TextSize = 11; LockLbl.ZIndex = 3
+            LockLbl.Visible = isLocked; LockLbl.Parent = e
+
+            if cfg.Desc and cfg.Desc ~= "" then
+                local DL = Instance.new("TextLabel"); DL.Size = UDim2.new(1,-92,0,13); DL.Position = UDim2.new(0,12,0,28)
+                DL.BackgroundTransparency = 1; DL.Text = cfg.Desc; DL.TextColor3 = T.SubText
+                DL.Font = Enum.Font.Gotham; DL.TextSize = 11; DL.TextXAlignment = Enum.TextXAlignment.Left; DL.Parent = e
             end
-            local TrBg=Instance.new("Frame"); TrBg.Size=UDim2.new(1,-24,0,6); TrBg.Position=UDim2.new(0,12,1,-17)
-            TrBg.BackgroundColor3=T.Tertiary; TrBg.BorderSizePixel=0; TrBg.Parent=e; Corner(TrBg,3)
-            local Fill=Instance.new("Frame"); Fill.Size=UDim2.new((cur-mn)/(mx-mn),0,1,0)
-            Fill.BackgroundColor3=T.Accent; Fill.BorderSizePixel=0; Fill.Parent=TrBg; Corner(Fill,3)
-            local FG=Instance.new("UIGradient"); FG.Color=ColorSequence.new(T.AccentDim,T.AccentHov); FG.Parent=Fill
-            local Knob=Instance.new("Frame"); Knob.Size=UDim2.new(0,16,0,16); Knob.AnchorPoint=Vector2.new(0.5,0.5)
-            Knob.Position=UDim2.new((cur-mn)/(mx-mn),0,0.5,0); Knob.BackgroundColor3=T.Text
-            Knob.BorderSizePixel=0; Knob.ZIndex=3; Knob.Parent=TrBg; Corner(Knob,8)
-            local Hit=Instance.new("TextButton"); Hit.Size=UDim2.new(1,10,0,32); Hit.Position=UDim2.new(0,-5,0.5,-16)
-            Hit.BackgroundTransparency=1; Hit.Text=""; Hit.ZIndex=4; Hit.Parent=TrBg
+
+            local TrBg = Instance.new("Frame"); TrBg.Size = UDim2.new(1,-24,0,6); TrBg.Position = UDim2.new(0,12,1,-17)
+            TrBg.BackgroundColor3 = T.Tertiary; TrBg.BorderSizePixel = 0; TrBg.Parent = e; Corner(TrBg,3)
+
+            local Fill = Instance.new("Frame"); Fill.Size = UDim2.new((cur-mn)/(mx-mn),0,1,0)
+            Fill.BackgroundColor3 = T.Accent; Fill.BorderSizePixel = 0; Fill.Parent = TrBg; Corner(Fill,3)
+            local FG = Instance.new("UIGradient"); FG.Color = ColorSequence.new(T.AccentDim,T.AccentHov); FG.Parent = Fill
+
+            local Knob = Instance.new("Frame"); Knob.Size = UDim2.new(0,16,0,16); Knob.AnchorPoint = Vector2.new(0.5,0.5)
+            Knob.Position = UDim2.new((cur-mn)/(mx-mn),0,0.5,0); Knob.BackgroundColor3 = T.Text
+            Knob.BorderSizePixel = 0; Knob.ZIndex = 3; Knob.Parent = TrBg; Corner(Knob,8)
+
+            -- Hit area is a SIBLING of TrBg inside `e`, NOT a child of TrBg
+            -- This prevents it from bleeding outside its element and captures
+            -- only intentional drags on the slider row.
+            local Hit = Instance.new("TextButton")
+            Hit.Size     = UDim2.new(1,-24,0,28)
+            Hit.Position = UDim2.new(0,12,1,-31)   -- covers TrBg + comfortable height
+            Hit.BackgroundTransparency = 1; Hit.Text = ""; Hit.ZIndex = 4; Hit.Parent = e
+
             local function Snap(r)
-                local v=stp>=1 and math.round(r/stp)*stp or math.round(r*(1/stp))/(1/stp)
-                return math.clamp(v,mn,mx)
+                local v = stp >= 1 and math.round(r/stp)*stp or math.round(r*(1/stp))/(1/stp)
+                return math.clamp(v, mn, mx)
             end
             local function Apply(v)
-                cur=v; local p=(cur-mn)/(mx-mn)
-                Fill.Size=UDim2.new(p,0,1,0); Knob.Position=UDim2.new(p,0,0.5,0); VL.Text=tostring(cur)
+                cur = v; local p = (cur-mn)/(mx-mn)
+                Fill.Size = UDim2.new(p,0,1,0); Knob.Position = UDim2.new(p,0,0.5,0); VL.Text = tostring(cur)
             end
-            local function ToVal(mx2)
-                local tx=TrBg.AbsolutePosition.X; local tw=TrBg.AbsoluteSize.X
-                if tw<=0 then return cur end
-                return Snap(mn+(mx-mn)*math.clamp((mx2-tx)/tw,0,1))
+            local function ToVal(screenX)
+                local tx = TrBg.AbsolutePosition.X; local tw = TrBg.AbsoluteSize.X
+                if tw <= 0 then return cur end
+                return Snap(mn + (mx-mn)*math.clamp((screenX-tx)/tw, 0, 1))
             end
-            local isDrag=false; local hb=nil
-            local function StartDrag()
-                isDrag=true; Tween(Knob,TweenInfo.new(0.08),{Size=UDim2.new(0,20,0,20)})
+
+            -- Per-slider drag state (not shared with other sliders)
+            local isDrag = false; local hb = nil
+            local dragToken = {}  -- unique table per slider instance used as ownership check
+
+            local function StopDrag(token)
+                if not isDrag or token ~= dragToken then return end
+                isDrag = false
+                Tween(Knob,TweenInfo.new(0.1),{Size=UDim2.new(0,16,0,16),BackgroundColor3=T.Text})
+                if hb then hb:Disconnect(); hb = nil end
+            end
+
+            local function StartDrag(token)
+                if isLocked then return end
+                isDrag = true
+                Tween(Knob,TweenInfo.new(0.08),{Size=UDim2.new(0,20,0,20)})
                 if hb then hb:Disconnect() end
-                hb=RunService.Heartbeat:Connect(function()
-                    if not isDrag then hb:Disconnect(); hb=nil; return end
-                    local mp=UserInputService:GetMouseLocation(); local nv=ToVal(mp.X)
-                    if nv~=cur then Apply(nv); if cfg.Callback then task.spawn(cfg.Callback,cur) end end
+                hb = RunService.Heartbeat:Connect(function()
+                    -- Stop if ownership changed (another slider stole focus) or button released
+                    if not isDrag or token ~= dragToken then hb:Disconnect(); hb = nil; return end
+                    local mp = UserInputService:GetMouseLocation()
+                    local nv = ToVal(mp.X)
+                    if nv ~= cur then Apply(nv); if cfg.Callback then task.spawn(cfg.Callback, cur) end end
                 end)
             end
-            local function StopDrag()
-                if not isDrag then return end; isDrag=false
-                Tween(Knob,TweenInfo.new(0.1),{Size=UDim2.new(0,16,0,16)})
-                if hb then hb:Disconnect(); hb=nil end
-            end
+
             Hit.MouseButton1Down:Connect(function()
-                local mp=UserInputService:GetMouseLocation(); Apply(ToVal(mp.X))
-                if cfg.Callback then task.spawn(cfg.Callback,cur) end; StartDrag()
+                if isLocked then return end
+                -- New drag session: new token invalidates any stale Heartbeat
+                dragToken = {}; local myToken = dragToken
+                local mp = UserInputService:GetMouseLocation()
+                Apply(ToVal(mp.X))
+                if cfg.Callback then task.spawn(cfg.Callback, cur) end
+                StartDrag(myToken)
+                -- Stop when THIS button's input ends (most reliable per-slider stop)
+                local conn; conn = UserInputService.InputEnded:Connect(function(i)
+                    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                        StopDrag(myToken); conn:Disconnect()
+                    end
+                end)
             end)
-            UserInputService.InputEnded:Connect(function(i)
-                if i.UserInputType==Enum.UserInputType.MouseButton1 then StopDrag() end
-            end)
-            TrBg.MouseEnter:Connect(function() if not isDrag then Tween(Knob,TweenInfo.new(0.12),{BackgroundColor3=T.AccentHov}) end end)
+
+            TrBg.MouseEnter:Connect(function() if not isDrag and not isLocked then Tween(Knob,TweenInfo.new(0.12),{BackgroundColor3=T.AccentHov}) end end)
             TrBg.MouseLeave:Connect(function() if not isDrag then Tween(Knob,TweenInfo.new(0.12),{BackgroundColor3=T.Text}) end end)
-            return {SetValue=function(v) Apply(math.clamp(v,mn,mx)) end, GetValue=function() return cur end}
+
+            -- Apply locked visual state
+            local function ApplyLockVisual()
+                local col = isLocked and T.SubText or T.Accent
+                Tween(Fill,TweenInfo.new(0.15),{BackgroundColor3=col})
+                Tween(Knob,TweenInfo.new(0.15),{BackgroundColor3=isLocked and T.SubText or T.Text})
+                LockLbl.Visible = isLocked
+                VL.TextColor3 = col
+            end
+
+            return {
+                SetValue  = function(v) if not isLocked then Apply(math.clamp(v,mn,mx)) end end,
+                GetValue  = function() return cur end,
+                SetLocked = function(v)
+                    isLocked = v
+                    -- Stop any active drag immediately
+                    if v then dragToken = {}; isDrag = false; if hb then hb:Disconnect(); hb=nil end end
+                    ApplyLockVisual()
+                end,
+                Refresh   = function(ncfg)
+                    ncfg = ncfg or {}
+                    if ncfg.Min   then mn  = ncfg.Min   end
+                    if ncfg.Max   then mx  = ncfg.Max   end
+                    if ncfg.Step  then stp = ncfg.Step  end
+                    if ncfg.Default then Apply(math.clamp(ncfg.Default,mn,mx)) end
+                    if ncfg.Title then TL.Text = ncfg.Title end
+                    if ncfg.Locked ~= nil then
+                        isLocked = ncfg.Locked
+                        if isLocked then dragToken={}; isDrag=false; if hb then hb:Disconnect(); hb=nil end end
+                        ApplyLockVisual()
+                    end
+                end,
+            }
         end
 
         -- INPUT / TEXTAREA  ✅  (Icon = left of title, InputIcon = inside box)
