@@ -3552,15 +3552,3 @@ end
 end
 
 return Library
-})
-
--- ── DropdownSection with inner Slider ─────────────────────────
-local fovSection = BindLeft:AddDropdownSection({
-    Text   = "FOV Settings",
-    Search = false,
-})
-
-local fovSlider = fovSection:AddSlider({
-    Text     = "FOV",
-    Min      = 50,
-    Max      = 120,
