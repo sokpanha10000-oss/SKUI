@@ -1,7 +1,7 @@
-# ✨ SKUI (SK Library V3.0)
+# ✨ SKUI (SK Library V3.2)
 
 ## 📌 About
-- **SKUI** is a rebuilt and optimized version of **SK Library V3.0**.
+- **SKUI** is a rebuilt and optimized version of **SK Library V3.2**.
 - It uses the same UI style as the original, with some improvements and refinements.
 - The reason the UI is named **SK** is that it should be the name of the next generation of **SK Hub** UIs
 
@@ -21,12 +21,14 @@ local SKUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha
 ```lua
 local Window = SKUI:CreateWindow({
     Title = "My Super Hub",
+    Icon = "bird",
     Author = "by .ftgs and .ftgs", -- optional
 })
 ```
 ```lua
 local Window = SKUI:CreateWindow({
     Title = "My Super Hub",
+    Icon = "bird",
     Author = "by .ftgs and .ftgs",
     Folder = "MySuperHub",
     
@@ -117,6 +119,7 @@ Normal
 ```lua
 local Tab = Window:Tab({
     Title = "Tab Title",
+    Icon = "bird",
     Locked = false,
 })
 ```
@@ -129,6 +132,7 @@ local Tab = Window:Tab({
 local Toggle = Tab:Toggle({
     Title = "Toggle",
     Desc = "Toggle Description",
+    Icon = "bird",
     Type = "Toggle",
     Value = false, -- default value
     Callback = function(state) 
@@ -189,7 +193,7 @@ local Input = Tab:Input({
     Title = "Input",
     Desc = "Input Description",
     Value = "Default value",
-    InputIcon = "",
+    InputIcon = "bird",
     Type = "Input", -- or "Textarea"
     Placeholder = "Enter text...",
     Callback = function(input) 
