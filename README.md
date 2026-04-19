@@ -85,21 +85,31 @@ local Window = SKUI:CreateWindow({
     },
 })
 ```
+### Color Window
+```lua
+Dark
+```
+```lua
+Light
+```
 
 ### Minimizer
 ```lua
 local MinimizeBtn = Window:CreateMinimizeBtn({
-  Name = "Open UI",
+  Title = "Open UI",
   Color = "Red",
 })
 ```
 
-### Color
+### Color Minimizer
 ```lua
 Red
 ```
 ```lua
 Blue
+```
+```lua
+Purple
 ```
 
 #### Creating a Tab
