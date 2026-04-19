@@ -1,6 +1,6 @@
 --[[
 ╔══════════════════════════════════════════════════════════════════╗
-║                  ftgs UI Library  v3.2                           ║
+║                  ftgs UI Library  v3.2.5                         ║
 ║  Built-in Icons · Key System · Themes · Resizable               ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
@@ -52,10 +52,16 @@
 ║      },                                                          ║
 ║  })                                                              ║
 ║                                                                  ║
+║  -- MinimizeBtn now supports Icon  ✅                            ║
 ║  local MinBtn = Window:CreateMinimizeBtn({                       ║
 ║      Title = "Open UI",                                          ║
+║      Icon  = "layout-dashboard",  -- optional lucide icon  ✅   ║
 ║      Color = "Purple",                                           ║
 ║  })                                                              ║
+║  -- Clicking MinBtn opens/closes the UI (normal animation).      ║
+║  -- Title bar ✕ now DESTROYS everything (ScreenGui:Destroy).     ║
+║  -- Title bar – still collapses/restores the window height.      ║
+║  -- ToggleKey synced to same open/close state as MinBtn.         ║
 ║                                                                  ║
 ║  -- Tab with optional Icon                                       ║
 ║  local Tab1 = Window:Tab({ Title="Home",    Icon="house"      }) ║
@@ -74,8 +80,10 @@
 ║      Callback=function(v) end })                                 ║
 ║  DD:SetValue("B")  |  DD:GetValue()                              ║
 ║                                                                  ║
+║  -- Toggle now supports a left-side Icon  ✅                     ║
 ║  local Tog = Tab1:Toggle({ Title="Auto Farm", Desc="Enable",     ║
-║      Value=false, Callback=function(s) end })      ✅            ║
+║      Icon="zap", Value=false,                -- Icon  ✅         ║
+║      Callback=function(s) end })                                 ║
 ║  Tog:SetValue(true)  |  Tog:GetValue()                           ║
 ║                                                                  ║
 ║  local Sld = Tab1:Slider({ Title="Speed", Desc="Walk speed",     ║
@@ -83,12 +91,13 @@
 ║      Callback=function(v) end })                                 ║
 ║  Sld:SetValue(75)  |  Sld:GetValue()                             ║
 ║                                                                  ║
-║  -- Input: InputIcon = "lucide-icon-name"  (optional)            ║
+║  -- Input: Icon (left of title) + InputIcon (inside box)  ✅     ║
 ║  local Inp = Tab1:Input({                                        ║
 ║      Title       = "Player Name",                                ║
 ║      Desc        = "Target player",                              ║
+║      Icon        = "user",    -- icon left of title  ✅          ║
+║      InputIcon   = "search",  -- icon inside the input box  ✅   ║
 ║      Value       = "Default value",                              ║
-║      InputIcon   = "user",    -- icon inside the input box  ✅   ║
 ║      Type        = "Input",   -- "Input" | "Textarea"            ║
 ║      Placeholder = "Enter text...",                              ║
 ║      Callback    = function(t) print(t) end,                     ║
@@ -815,9 +824,9 @@ function Library:CreateWindow(config)
     config = config or {}
 
     local T       = Themes[config.Theme] or Themes.Dark
-    local W       = (config.Size or UDim2.fromOffset(540,340)).X.Offset
-    local H       = (config.Size or UDim2.fromOffset(540,340)).Y.Offset
-    local MINW    = config.MinSize and config.MinSize.X or 340
+    local W       = (config.Size or UDim2.fromOffset(550,340)).X.Offset
+    local H       = (config.Size or UDim2.fromOffset(550,340)).Y.Offset
+    local MINW    = config.MinSize and config.MinSize.X or 480
     local MINH    = config.MinSize and config.MinSize.Y or 320
     local MAXW    = config.MaxSize and config.MaxSize.X or 900
     local MAXH    = config.MaxSize and config.MaxSize.Y or 600
@@ -999,28 +1008,70 @@ function Library:CreateWindow(config)
     ContentArea.Size=UDim2.new(1,-(SIDEW+8),1,-54); ContentArea.Position=UDim2.new(0,SIDEW+4,0,50)
     ContentArea.BackgroundTransparency=1; ContentArea.BorderSizePixel=0; ContentArea.Parent=Main
 
-    -- ── Minimize / Close / ToggleKey ─────────────
-    local minimized=false
+    -- ── Shared visibility state ───────────────────
+    -- _uiVisible tracks whether the window is open (true) or hidden (false).
+    -- All open/close triggers (FloatBtn, ToggleKey, CloseBtn) use these helpers
+    -- so they stay perfectly in sync.
+    local minimized   = false
+    local _uiVisible  = false   -- set to true by _DoShow / ShowMain
+
+    -- Shared open/close callbacks table — FloatBtn registers here so
+    -- its label updates whenever something else opens/closes the UI.
+    local _openCloseCbs = {}
+
+    local function _NotifyCallbacks()
+        for _, cb in ipairs(_openCloseCbs) do pcall(cb, _uiVisible) end
+    end
+
+    local function _DoShow()
+        if _uiVisible then return end
+        _uiVisible = true; minimized = false
+        Main.Size = UDim2.fromOffset(W,0); Main.Visible = true
+        Tween(Main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size=UDim2.fromOffset(W,H)})
+        _NotifyCallbacks()
+    end
+
+    local function _DoHide()
+        if not _uiVisible then return end
+        _uiVisible = false
+        Tween(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {Size=UDim2.fromOffset(W,0)})
+        task.delay(0.22, function()
+            if not _uiVisible then Main.Visible = false end
+        end)
+        _NotifyCallbacks()
+    end
+
+    -- Close destroys the entire ScreenGui (all windows + FloatBtns).
+    local function _DoDestroy()
+        _uiVisible = false
+        Tween(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {Size=UDim2.fromOffset(W,0)})
+        task.delay(0.22, function() ScreenGui:Destroy() end)
+    end
+
+    -- ── Title-bar "–"  (collapse / restore height only) ──────────
     MiniBtn.MouseButton1Click:Connect(function()
-        minimized=not minimized
-        if minimized then Tween(Main,TweenInfo.new(0.22,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,46)})
-        else local cw=Main.AbsoluteSize.X; Tween(Main,TweenInfo.new(0.28,Enum.EasingStyle.Back),{Size=UDim2.fromOffset(cw,H)}) end
+        if not _uiVisible then return end
+        minimized = not minimized
+        if minimized then
+            Tween(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {Size=UDim2.fromOffset(W,46)})
+        else
+            local cw = Main.AbsoluteSize.X
+            Tween(Main, TweenInfo.new(0.28, Enum.EasingStyle.Back), {Size=UDim2.fromOffset(cw,H)})
+        end
     end)
-    CloseBtn.MouseButton1Click:Connect(function()
-        Tween(Main,TweenInfo.new(0.18,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,0)})
-        task.delay(0.2,function() Main.Visible=false end)
-    end)
+
+    -- ── Title-bar "✕"  (destroy everything) ──────────────────────
+    CloseBtn.MouseButton1Click:Connect(_DoDestroy)
+
+    -- ── ToggleKey  (open / close, synced with FloatBtn) ──────────
     if config.ToggleKey then
         UserInputService.InputBegan:Connect(function(i,gpe)
             if gpe then return end
-            if i.KeyCode==config.ToggleKey then
-                if Main.Visible then
-                    Tween(Main,TweenInfo.new(0.18,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,0)})
-                    task.delay(0.2,function() Main.Visible=false end)
-                else
-                    Main.Size=UDim2.fromOffset(W,0); Main.Visible=true; minimized=false
-                    Tween(Main,TweenInfo.new(0.3,Enum.EasingStyle.Back),{Size=UDim2.fromOffset(W,H)})
-                end
+            if i.KeyCode == config.ToggleKey then
+                if _uiVisible then _DoHide() else _DoShow() end
             end
         end)
     end
@@ -1052,27 +1103,67 @@ function Library:CreateWindow(config)
     local WindowObj={}
 
     function WindowObj:CreateMinimizeBtn(cfg)
-        cfg=cfg or {}; local label=cfg.Title or "Open UI"
-        local clrs={Red=T.Danger,Green=T.Success,Blue=T.Blue,Purple=T.Accent,Yellow=T.Warning,Orange=T.Orange}
-        local bg=clrs[cfg.Color] or T.Accent
-        local FB=Instance.new("TextButton"); FB.Name="FloatBtn"
-        FB.Size=UDim2.fromOffset(118,34); FB.Position=UDim2.new(0,16,0.5,70)
-        FB.BackgroundColor3=bg; FB.Text=label; FB.TextColor3=T.Text
-        FB.Font=Enum.Font.GothamBold; FB.TextSize=12; FB.BorderSizePixel=0; FB.ZIndex=50; FB.Parent=ScreenGui
-        Corner(FB,9)
-        local FBStr=Instance.new("UIStroke"); FBStr.Color=Color3.fromRGB(255,255,255)
-        FBStr.Transparency=0.78; FBStr.Thickness=1; FBStr.Parent=FB
-        MakeDraggable(FB)
-        local vis=true
-        FB.MouseButton1Click:Connect(function()
-            vis=not vis
-            if vis then Main.Size=UDim2.fromOffset(W,0); Main.Visible=true; minimized=false
-                Tween(Main,TweenInfo.new(0.3,Enum.EasingStyle.Back),{Size=UDim2.fromOffset(W,H)}); FB.Text="Hide UI"
-            else Tween(Main,TweenInfo.new(0.18,Enum.EasingStyle.Quad),{Size=UDim2.fromOffset(W,0)})
-                task.delay(0.2,function() Main.Visible=false; FB.Text=label end) end
+        cfg = cfg or {}
+        local label   = cfg.Title or "Open UI"
+        local clrs    = {Red=T.Danger,Green=T.Success,Blue=T.Blue,Purple=T.Accent,Yellow=T.Warning,Orange=T.Orange}
+        local bg      = clrs[cfg.Color] or T.Accent
+        local iconData = _ResolveIcon(cfg.Icon)
+        local btnW    = iconData and 142 or 118
+
+        local FB = Instance.new("TextButton"); FB.Name = "FloatBtn"
+        FB.Size = UDim2.fromOffset(btnW, 34)
+        FB.Position = UDim2.new(0,16,0.5,70)
+        FB.BackgroundColor3 = bg; FB.Text = ""
+        FB.BorderSizePixel = 0; FB.ZIndex = 50; FB.Parent = ScreenGui
+        Corner(FB, 9)
+        local FBStr = Instance.new("UIStroke"); FBStr.Color = Color3.fromRGB(255,255,255)
+        FBStr.Transparency = 0.78; FBStr.Thickness = 1; FBStr.Parent = FB
+
+        -- Icon (left side, correct position)
+        if iconData then
+            local FBIco = Instance.new("ImageLabel")
+            FBIco.Size              = UDim2.new(0,16,0,16)
+            FBIco.Position          = UDim2.new(0,10,0.5,0)
+            FBIco.AnchorPoint       = Vector2.new(0,0.5)
+            FBIco.BackgroundTransparency = 1
+            FBIco.Image             = iconData.Image
+            if iconData.RectSize ~= Vector2.new(0,0) then
+                FBIco.ImageRectSize   = iconData.RectSize
+                FBIco.ImageRectOffset = iconData.RectPos
+            end
+            FBIco.ImageColor3 = T.Text
+            FBIco.ZIndex = 51; FBIco.Parent = FB
+        end
+
+        -- Text label (always internal so we can update it)
+        local textLeft = iconData and 32 or 10
+        local FBLbl = Instance.new("TextLabel")
+        FBLbl.Size = UDim2.new(1,-textLeft-6,1,0)
+        FBLbl.Position = UDim2.new(0,textLeft,0,0)
+        FBLbl.BackgroundTransparency = 1
+        FBLbl.Text = _uiVisible and "Hide UI" or label
+        FBLbl.TextColor3 = T.Text; FBLbl.Font = Enum.Font.GothamBold
+        FBLbl.TextSize = 12
+        FBLbl.TextXAlignment = iconData and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
+        FBLbl.ZIndex = 51; FBLbl.Parent = FB
+
+        -- Keep label in sync whenever the UI is shown/hidden by any trigger
+        table.insert(_openCloseCbs, function(visible)
+            FBLbl.Text = visible and "Hide UI" or label
         end)
-        FB.MouseEnter:Connect(function() Tween(FB,TweenInfo.new(0.12),{BackgroundColor3=Color3.new(math.min(bg.R*1.18,1),math.min(bg.G*1.18,1),math.min(bg.B*1.18,1))}) end)
-        FB.MouseLeave:Connect(function() Tween(FB,TweenInfo.new(0.12),{BackgroundColor3=bg}) end)
+
+        MakeDraggable(FB)
+
+        FB.MouseButton1Click:Connect(function()
+            if _uiVisible then _DoHide() else _DoShow() end
+        end)
+        FB.MouseEnter:Connect(function()
+            Tween(FB,TweenInfo.new(0.12),{BackgroundColor3=Color3.new(
+                math.min(bg.R*1.18,1),math.min(bg.G*1.18,1),math.min(bg.B*1.18,1))})
+        end)
+        FB.MouseLeave:Connect(function()
+            Tween(FB,TweenInfo.new(0.12),{BackgroundColor3=bg})
+        end)
         return FB
     end
 
@@ -1193,10 +1284,30 @@ function Library:CreateWindow(config)
             }
         end
 
-        -- TOGGLE  ✅
+        -- TOGGLE  ✅  (supports Icon = "lucide-icon-name")
         function Elem:Toggle(cfg)
             cfg=cfg or {}; local state=cfg.Value or false
-            local e=NewElem(52); Labels(e,cfg.Title or "Toggle",cfg.Desc or "")
+            local e=NewElem(52)
+
+            -- Left-side element icon
+            local togIconOffset = 0
+            local togIconData   = _ResolveIcon(cfg.Icon)
+            if togIconData then
+                togIconOffset = 26
+                local ico = Instance.new("ImageLabel")
+                ico.Size              = UDim2.new(0,16,0,16)
+                ico.Position          = UDim2.new(0,10,0.5,0)
+                ico.AnchorPoint       = Vector2.new(0,0.5)
+                ico.BackgroundTransparency = 1
+                ico.Image             = togIconData.Image
+                if togIconData.RectSize ~= Vector2.new(0,0) then
+                    ico.ImageRectSize   = togIconData.RectSize
+                    ico.ImageRectOffset = togIconData.RectPos
+                end
+                ico.ImageColor3 = T.SubText; ico.ZIndex = 2; ico.Parent = e
+            end
+
+            Labels(e,cfg.Title or "Toggle",cfg.Desc or "",togIconOffset)
             local Track=Instance.new("Frame"); Track.Size=UDim2.new(0,46,0,24); Track.Position=UDim2.new(1,-58,0.5,-12)
             Track.BackgroundColor3=state and T.Accent or T.Border; Track.BorderSizePixel=0; Track.Parent=e; Corner(Track,12)
             local Knob=Instance.new("Frame"); Knob.Size=UDim2.new(0,18,0,18); Knob.AnchorPoint=Vector2.new(0,0.5)
@@ -1281,13 +1392,32 @@ function Library:CreateWindow(config)
             return {SetValue=function(v) Apply(math.clamp(v,mn,mx)) end, GetValue=function() return cur end}
         end
 
-        -- INPUT / TEXTAREA  ✅  (supports InputIcon = "icon-name")
+        -- INPUT / TEXTAREA  ✅  (Icon = left of title, InputIcon = inside box)
         function Elem:Input(cfg)
             cfg=cfg or {}
             local isTA    = cfg.Type=="Textarea"
             local h       = isTA and 84 or 52
             local e       = NewElem(h)
-            Labels(e, cfg.Title or "Input", cfg.Desc or "")
+
+            -- Left-side element icon (next to title)
+            local inpIconOffset = 0
+            local inpElemIcon   = _ResolveIcon(cfg.Icon)
+            if inpElemIcon then
+                inpIconOffset = 26
+                local ico = Instance.new("ImageLabel")
+                ico.Size              = UDim2.new(0,16,0,16)
+                ico.Position          = UDim2.new(0,10,0.5,0)
+                ico.AnchorPoint       = Vector2.new(0,0.5)
+                ico.BackgroundTransparency = 1
+                ico.Image             = inpElemIcon.Image
+                if inpElemIcon.RectSize ~= Vector2.new(0,0) then
+                    ico.ImageRectSize   = inpElemIcon.RectSize
+                    ico.ImageRectOffset = inpElemIcon.RectPos
+                end
+                ico.ImageColor3 = T.SubText; ico.ZIndex = 2; ico.Parent = e
+            end
+
+            Labels(e, cfg.Title or "Input", cfg.Desc or "", inpIconOffset)
 
             local IBg=Instance.new("Frame")
             IBg.Size=UDim2.new(0,158,0,isTA and 60 or 28)
@@ -1304,7 +1434,7 @@ function Library:CreateWindow(config)
                 inputIconOffset = 26
                 icoLabel = Instance.new("ImageLabel")
                 icoLabel.Size             = UDim2.new(0,14,0,14)
-                icoLabel.Position         = UDim2.new(0,8,0.5,-7)
+                icoLabel.Position         = UDim2.new(0,8,0.5,0)
                 icoLabel.AnchorPoint      = Vector2.new(0,0.5)
                 icoLabel.BackgroundTransparency = 1
                 icoLabel.Image            = inputIconData.Image
@@ -1361,11 +1491,9 @@ function Library:CreateWindow(config)
         return Elem
     end -- :Tab()
 
-    -- show window
+    -- show window (uses shared state so FloatBtn / ToggleKey stay in sync)
     local function ShowMain()
-        Main.Size=UDim2.fromOffset(W,0); Main.Visible=true
-        Tween(Main,TweenInfo.new(0.32,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-            {Size=UDim2.fromOffset(W,H)})
+        _DoShow()
     end
 
     if config.KeySystem then
