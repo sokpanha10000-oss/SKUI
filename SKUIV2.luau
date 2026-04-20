@@ -2948,11 +2948,6 @@ function Library:CreateWindow(Setting)
 						Dropdowntitle.Text = Title .. ': '
 					end
 				end
-				-- Refresh: replace the dropdown list with a new one
-				-- Usage: Dropdown:Refresh({ "A", "B", "C" })
-				function dropdownFunction:Refresh(List)
-					self:GetNewList(List)
-				end
 				-- THÊM ĐOẠN NÀY
                 function dropdownFunction:SetValue(value)
                     if not Selected then
