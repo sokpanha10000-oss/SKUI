@@ -15,6 +15,7 @@ local Window = Library:CreateWindow({
     Title = "My Banana Cat Style Hub",
     Desc = "Custom Hub - No Section Version",
     Author = " By STEVEKHMER",
+    Image = "Image Id",
 })
 ```
 
@@ -31,7 +32,7 @@ local Section = Tab:Section({
 })
 ```
 
-#### Toggle
+#### ⚡Toggle
 ```lua
 local Toggle  = Tab:Toggle({ 
       Title = "Toggle", 
@@ -53,7 +54,7 @@ end
 })
 ```
 
-#### Button
+#### ⚡Button
 ```lua
 local Button = Tab:Button({ 
       Title = "Button", 
@@ -73,7 +74,7 @@ end
 })
 ```
 
- #### Slider
+ #### ⚡Slider
  ```lua
 local Slider = Tab:Slider({ 
     Title = "Slider", 
@@ -103,7 +104,7 @@ end
 })
 ```
 
-#### Dropdown
+#### ⚡Dropdown
 ```lua
 local Dropdown = Tab:Dropdown({ 
     Title = "Dropdown", 
@@ -125,7 +126,7 @@ end
 })
 ```
 
-#### Input
+#### ⚡Input
 ```lua
 local Input = Tab:Input({ 
     Title = "Input", 
@@ -147,7 +148,7 @@ end
 })
 ```
 
-#### Notify
+#### ⚡Notify
 ```lua
 Window:Notify({
     Title    = "SK Hub",
