@@ -447,8 +447,8 @@ function Library:CreateWindow(Setting)
     local AuthorText = Setting.Author and (" | " .. tostring(Setting.Author)) or ""
     getgenv().MainDesc = (Setting.Desc or Setting.Subtitle or "") .. AuthorText
     
-    if Setting.Image then
-        getgenv().UIColor["Logo Image"] = Setting.Image
+    if Setting.Image or Setting.Logo then
+        getgenv().UIColor["Logo Image"] = Setting.Image or Setting.Logo
     end
     
 	local djtmemay = false
