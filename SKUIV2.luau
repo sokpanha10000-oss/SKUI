@@ -3550,45 +3550,39 @@ end
         end
 
 	-- =====================================================
-	-- NEW SIMPLIFIED TAB API
-	-- Usage: local Tab = Window:Tab({ Title = "...", Locked = false })
-	--        Tab:Toggle({ Title, Desc, Value, Callback })
-	--        Tab:Button({ Title, Desc, Callback })
-	--        Tab:Slider({ Title, Desc, Step, Value={Min,Max,Default}, Callback })
-	--        Tab:Dropdown({ Title, Desc, Values, Value, Callback })
-	--        Tab:Input({ Title, Desc, Value, Placeholder, Callback })
+	-- SIMPLIFIED TAB API
+	--
+	-- Option A – Elements directly on Tab (auto section):
+	--   local Tab = Window:Tab({ Title = "Tab Title" })
+	--   Tab:Toggle(...)  Tab:Button(...)  Tab:Slider(...)
+	--   Tab:Dropdown(...)  Tab:Input(...)
+	--
+	-- Option B – Named Sections inside a Tab:
+	--   local Tab = Window:Tab({ Title = "Tab Title" })
+	--   local Section = Tab:Section({ Title = "Main" })
+	--   Section:Toggle(...)  Section:Button(...)  etc.
+	--   (Multiple sections allowed per Tab)
 	-- =====================================================
-	function Main_Function:Tab(Setting)
-		local tabTitle = Setting.Title or Setting.Text or "Tab"
-		-- Internally reuse the existing AddTab method to build the page
-		local pagefunc = self:AddTab(tabTitle)
-		-- Create one default section to hold all elements
-		local section = pagefunc:AddLeftGroupbox(tabTitle)
 
-		local tabObj = {}
-
-		-- Toggle: Tab:Toggle({ Title, Desc, Type, Value, Callback })
-		function tabObj:Toggle(s)
-			return section:AddToggle("_", {
+	-- Helper: builds the 5 element methods onto any object, bound to a given sectionFunc
+	local function _bindElementsToSection(obj, sec)
+		function obj:Toggle(s)
+			return sec:AddToggle("_", {
 				Title    = s.Title or s.Text or "",
 				Desc     = s.Desc or s.Description,
 				Default  = s.Value or false,
 				Callback = s.Callback or function() end,
 			})
 		end
-
-		-- Button: Tab:Button({ Title, Desc, Locked, Callback })
-		function tabObj:Button(s)
-			return section:AddButton({
+		function obj:Button(s)
+			return sec:AddButton({
 				Title    = s.Title or s.Text or "",
 				Callback = s.Callback or function() end,
 			})
 		end
-
-		-- Slider: Tab:Slider({ Title, Desc, Step, Value={Min,Max,Default}, Callback })
-		function tabObj:Slider(s)
+		function obj:Slider(s)
 			local v = s.Value or {}
-			return section:AddSlider({
+			return sec:AddSlider({
 				Title    = s.Title or s.Text or "",
 				Min      = v.Min or 0,
 				Max      = v.Max or 100,
@@ -3597,26 +3591,66 @@ end
 				Callback = s.Callback or function() end,
 			})
 		end
-
-		-- Dropdown: Tab:Dropdown({ Title, Desc, Values, Value, Callback })
-		function tabObj:Dropdown(s)
-			return section:AddDropdown("_", {
+		function obj:Dropdown(s)
+			return sec:AddDropdown("_", {
 				Title    = s.Title or s.Text or "",
 				Values   = s.Values or {},
 				Default  = s.Value,
 				Callback = s.Callback or function() end,
 			})
 		end
-
-		-- Input: Tab:Input({ Title, Desc, Value, InputIcon, Type, Placeholder, Callback })
-		function tabObj:Input(s)
-			return section:AddInput("_", {
+		function obj:Input(s)
+			return sec:AddInput("_", {
 				Title       = s.Title or s.Text or "",
 				Placeholder = s.Placeholder or "",
 				Default     = s.Value or false,
 				Callback    = s.Callback or function() end,
 			})
 		end
+	end
+
+	function Main_Function:Tab(Setting)
+		local tabTitle = Setting.Title or Setting.Text or "Tab"
+		local pagefunc = self:AddTab(tabTitle)
+
+		-- Lazy default section: only created if user calls elements directly on Tab
+		local defaultSection = nil
+		local function getDefaultSection()
+			if not defaultSection then
+				defaultSection = pagefunc:AddLeftGroupbox(tabTitle)
+			end
+			return defaultSection
+		end
+
+		local tabObj = {}
+
+		-- Section: Tab:Section({ Title = "My Section" })
+		-- Creates a named section and returns an object with all 5 element methods.
+		-- Can be called multiple times to add multiple sections.
+		function tabObj:Section(s)
+			local sectionTitle = s.Title or s.Text or "Section"
+			local sec = pagefunc:AddLeftGroupbox(sectionTitle)
+			local sectionObj = {}
+			_bindElementsToSection(sectionObj, sec)
+			return sectionObj
+		end
+
+		-- Direct element methods on Tab (uses one shared auto-created default section)
+		local directProxy = {}
+		_bindElementsToSection(directProxy, setmetatable({}, {
+			__index = function(_, key)
+				return function(self2, ...)
+					local sec = getDefaultSection()
+					return sec[key](sec, ...)
+				end
+			end
+		}))
+
+		function tabObj:Toggle(s)  return directProxy:Toggle(s)   end
+		function tabObj:Button(s)  return directProxy:Button(s)   end
+		function tabObj:Slider(s)  return directProxy:Slider(s)   end
+		function tabObj:Dropdown(s)return directProxy:Dropdown(s) end
+		function tabObj:Input(s)   return directProxy:Input(s)    end
 
 		return tabObj
 	end
