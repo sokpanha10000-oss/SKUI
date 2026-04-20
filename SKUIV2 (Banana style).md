@@ -87,7 +87,7 @@ end
 })
 ```
 ```lua
-local Slider  = Tab:Slider({ 
+local Slider = Section:Slider({ 
     Title="Slider", 
     Step=1, 
     Value={
@@ -113,7 +113,7 @@ end
 })
 ```
 ```lua
-local Dropdown= Tab:Dropdown({ 
+local Dropdown= Section:Dropdown({ 
     Title="Dropdown", 
     Values={"A","B","C"}, 
     Value="A", 
@@ -125,7 +125,7 @@ end
 
 #### Input
 ```lua
-local Input   = Tab:Input({ 
+local Input = Tab:Input({ 
     Title="Input", 
     Placeholder="Enter text...", 
     Value="Default", 
@@ -135,7 +135,7 @@ end
 })
 ```
 ```lua
-local Input   = Tab:Input({ 
+local Input = Section:Input({ 
     Title="Input", 
     Placeholder="Enter text...", 
     Value="Default", 
