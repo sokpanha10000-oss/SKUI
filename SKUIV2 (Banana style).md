@@ -34,10 +34,10 @@ local Section = Tab:Section({
 #### Toggle
 ```lua
 local Toggle  = Tab:Toggle({ 
-      Title= "Toggle", 
-      Desc= "...", 
-      Value= false, 
-     Callback=function(s) 
+      Title = "Toggle", 
+      Desc = "...", 
+      Value = false, 
+     Callback = function(s) 
 
 end 
 })
