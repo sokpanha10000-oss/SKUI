@@ -74,7 +74,7 @@ end
 
  #### Slider
  ```lua
-local Slider  = Tab:Slider({ 
+local Slider = Tab:Slider({ 
     Title="Slider", 
     Step=1, 
     Value={
@@ -104,7 +104,7 @@ end
 
 #### Dropdown
 ```lua
-local Dropdown= Tab:Dropdown({ 
+local Dropdown = Tab:Dropdown({ 
     Title="Dropdown", 
     Values={"A","B","C"}, 
     Value="A", 
@@ -114,7 +114,7 @@ end
 })
 ```
 ```lua
-local Dropdown= Section:Dropdown({ 
+local Dropdown = Section:Dropdown({ 
     Title="Dropdown", 
     Values={"A","B","C"}, 
     Value="A", 
