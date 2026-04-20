@@ -36,7 +36,7 @@ local Section = Tab:Section({
 local Toggle  = Tab:Toggle({ 
       Title= "Toggle", 
       Desc= "...", 
-      Value=false, 
+      Value= false, 
      Callback=function(s) 
 
 end 
@@ -44,10 +44,10 @@ end
 ```
 ```lua
 local Toggle  = Section:Toggle({ 
-      Title= "Toggle", 
-      Desc= "...", 
-      Value=false, 
-     Callback=function(s) 
+      Title = "Toggle", 
+      Desc = "...", 
+      Value = false, 
+     Callback = function(s) 
 
 end 
 })
@@ -56,18 +56,18 @@ end
 #### Button
 ```lua
 local Button = Tab:Button({ 
-      Title= "Button", 
-      Desc= "...", 
-     Callback=function() 
+      Title = "Button", 
+      Desc = "...", 
+     Callback = function() 
 
 end 
 })
 ```
 ```lua
 local Button = Section:Button({ 
-      Title= "Button", 
-      Desc= "...", 
-     Callback=function() 
+      Title = "Button", 
+      Desc = "...", 
+     Callback = function() 
 
 end 
 })
@@ -76,28 +76,28 @@ end
  #### Slider
  ```lua
 local Slider = Tab:Slider({ 
-    Title= "Slider", 
-    Step=1, 
-    Value={
-      Min= 20,
-      Max= 120,
-      Default= 70
+    Title = "Slider", 
+    Step =1, 
+    Value ={
+      Min = 20,
+      Max = 120,
+      Default = 70
       }, 
-     Callback=function(v) 
+     Callback = function(v) 
 
 end 
 })
 ```
 ```lua
 local Slider = Section:Slider({ 
-    Title= "Slider", 
-    Step=1, 
-    Value={
-      Min= 20,
-      Max= 120,
-      Default= 70
+    Title = "Slider", 
+    Step =1, 
+    Value = { 
+      Min = 20,
+      Max = 120,
+      Default = 70
       }, 
-     Callback=function(v) 
+     Callback = function(v) 
 
 end 
 })
@@ -106,10 +106,10 @@ end
 #### Dropdown
 ```lua
 local Dropdown = Tab:Dropdown({ 
-    Title= "Dropdown", 
-    Values= {"A","B","C"}, 
-    Value= "A", 
-   Callback=function(o) 
+    Title = "Dropdown", 
+    Values = {"A","B","C"}, 
+    Value = "A", 
+   Callback = function(o) 
 
 end 
 })
@@ -117,9 +117,9 @@ end
 ```lua
 local Dropdown = Section:Dropdown({ 
     Title= "Dropdown", 
-    Values= {"A","B","C"}, 
-    Value= "A", 
-   Callback=function(o) 
+    Values = {"A","B","C"}, 
+    Value = "A", 
+   Callback = function(o) 
 
 end 
 })
@@ -128,20 +128,20 @@ end
 #### Input
 ```lua
 local Input = Tab:Input({ 
-    Title= "Input", 
-    Placeholder= "Enter text...", 
-    Value= "Default", 
-   Callback=function(t) 
+    Title = "Input", 
+    Placeholder = "Enter text...", 
+    Value = "Default", 
+   Callback = function(t) 
 
 end 
 })
 ```
 ```lua
 local Input = Section:Input({ 
-    Title= "Input", 
-    Placeholder= "Enter text...", 
-    Value= "Default", 
-   Callback=function(t) 
+    Title = "Input", 
+    Placeholder = "Enter text...", 
+    Value = "Default", 
+   Callback = function(t) 
 
 end 
 })
