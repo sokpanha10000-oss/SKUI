@@ -326,7 +326,7 @@ local libCreateNoti = function(Setting)
 	Ruafimg.BackgroundTransparency = 1.000
 	Ruafimg.Position = UDim2.new(0, 5, 0, getgenv().T1 and 5 or 0)
 	Ruafimg.Size = UDim2.new(0, getgenv().T1 and 30 or 25, 0, getgenv().T1 and 15 or 25)
-	Ruafimg.Image = getgenv().UIColor["Logo Image"]
+	Ruafimg.Image = Setting.ImageL or Setting.Image or getgenv().UIColor["Logo Image"]
 
 	RuafimgCorner.CornerRadius = UDim.new(1, 0)
 	RuafimgCorner.Name = "RuafimgCorner"
@@ -3548,6 +3548,20 @@ end
         end
 		return pagefunc
         end
+
+	-- =====================================================
+	-- WINDOW NOTIFY API
+	-- Usage: Window:Notify({ Title, Desc, ImageL, Duration })
+	-- =====================================================
+	function Main_Function:Notify(Setting)
+		Library:Notify({
+			Title    = Setting.Title or "",
+			Desc     = Setting.Desc or Setting.Description or "",
+			ImageL   = Setting.ImageL or Setting.Image,
+			Duration = Setting.Duration or Setting.Delay or 10,
+		})
+	end
+	-- =====================================================
 
 	-- =====================================================
 	-- SIMPLIFIED TAB API
