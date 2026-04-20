@@ -40,6 +40,7 @@ local Toggle  = Tab:Toggle({
 
 end 
 })
+```
 ```lua
 local Toggle  = Section:Toggle({ 
       Title="Toggle", 
