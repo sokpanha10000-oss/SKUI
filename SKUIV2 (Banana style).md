@@ -145,3 +145,13 @@ local Input = Section:Input({
 end 
 })
 ```
+
+#### Notify
+```lua
+Window:Notify({
+    Title    = "SK Hub",
+    Desc     = "Thank you for using it",
+    ImageL   = "rbxassetid://128185233852701",  -- custom logo (optional)
+    Duration = 5                                 -- seconds (optional, default 10)
+})
+```
