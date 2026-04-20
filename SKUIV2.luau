@@ -1,13 +1,13 @@
-if getgenv().Nousigi then 
-	if game.CoreGui:FindFirstChild("Nousigi Hub GUI") then
+if getgenv().SKUI then 
+	if game.CoreGui:FindFirstChild("SK Hub GUI") then
 		for i, v in ipairs(game.CoreGui:GetChildren()) do
-			if string.find(v.Name,  "Nousigi Hub") then
+			if string.find(v.Name,  "SK Hub") then
 				v:Destroy()
 			end
 		end
 	end
 end
-getgenv().Nousigi = true
+getgenv().SKUI = true
 
 local DisableAnimation = game.Players.LocalPlayer.PlayerGui:FindFirstChild('TouchGui')
 local T1UIColor = {
