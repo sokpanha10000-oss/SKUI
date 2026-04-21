@@ -2948,6 +2948,55 @@ function Library:CreateWindow(Setting)
 						Dropdowntitle.Text = Title .. ': '
 					end
 				end
+				-- =====================================================
+				-- Dropdown:Refresh({ "A", "B" })
+				-- Updates the dropdown list in-place WITHOUT closing
+				-- or resetting open/close state.
+				-- Works together with Button and Toggle callbacks.
+				--
+				-- Single-select example:
+				--   local Btn = Section:AddButton({ Title = "Load Items", Callback = function()
+				--       MyDropdown:Refresh({ "A", "B", "C" })
+				--   end })
+				--
+				-- Multi-select example:
+				--   local Tog = Section:AddToggle("_", { Title = "Show Extra", Callback = function(v)
+				--       MyDropdown:Refresh(v and { "A", "B", "X" } or { "A", "B" })
+				--   end })
+				-- =====================================================
+				function dropdownFunction:Refresh(newList)
+					if Selected then
+						-- Multi-select mode: preserve any items that are still
+						-- in the new list and were previously checked.
+						local prevChecked = {}
+						for k, v in pairs(ListNew) do
+							if v == true then prevChecked[k] = true end
+						end
+						ListNew = {}
+						OrderedList = {}
+						for _, value in ipairs(newList) do
+							ListNew[value] = prevChecked[value] == true
+							table.insert(OrderedList, value)
+						end
+					else
+						-- Single-select mode: swap the list.
+						-- If the previously selected value is no longer present,
+						-- clear the display text automatically.
+						local currentVal = Sel.Value
+						ListNew = newList
+						if currentVal ~= "" and not table.find(ListNew, currentVal) then
+							Sel.Value = ""
+							if Search then
+								Dropdowntitle.PlaceholderText = Title .. ': '
+							else
+								Dropdowntitle.Text = Title .. ': '
+							end
+						end
+					end
+					-- Rebuild the item list without touching isbusy / open state.
+					refreshlist()
+				end
+
 				-- THÊM ĐOẠN NÀY
                 function dropdownFunction:SetValue(value)
                     if not Selected then
