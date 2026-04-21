@@ -75,8 +75,8 @@ end
  ```lua
 local Slider = Tab:Slider({ 
     Title = "Slider", 
-    Step =1, 
-    Value ={
+    Step = 1, 
+    Value = {
       Min = 20,
       Max = 120,
       Default = 70
@@ -89,7 +89,7 @@ end
 ```lua
 local Slider = Section:Slider({ 
     Title = "Slider", 
-    Step =1, 
+    Step = 1, 
     Value = { 
       Min = 20,
       Max = 120,
