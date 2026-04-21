@@ -125,6 +125,9 @@ local Dropdown = Section:Dropdown({
 end 
 })
 ```
+```lua
+Dropdown:Refresh(enabled and { "A", "B", "X" } or { "A", "B" })
+```
 
 #### ⚡Input
 ```lua
