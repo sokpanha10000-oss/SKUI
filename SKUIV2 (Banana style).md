@@ -15,20 +15,20 @@ local Window = Library:CreateWindow({
     Title = "My Banana Cat Style Hub",
     Desc = "Custom Hub - No Section Version",
     Author = " By STEVEKHMER",
-    Image = "Image Id",
+    LogoImage = "LogoImage Id",
 })
 ```
 
 ### 📑Tab
 ```lua
 local Tab = Window:Tab({
-    Title = "Main",
+    Title = "Tab title",
     Locked = false,
 })
 ```
 ```lua
 local Section = Tab:Section({ 
-    Title = "Movement" 
+    Title = "Section title" 
 })
 ```
 
