@@ -1,7 +1,6 @@
 # ✨SKUIV2✨
 **BANANA STYLE** This is V2 of my UI Library.
 If you don't use Section also working.
-I will add Image to Window Later in (Apr 21 2026 or today)
 Good Bye
 
 # Get 🔘Start
