@@ -450,6 +450,14 @@ function Library:CreateWindow(Setting)
     if Setting.Image or Setting.Logo then
         getgenv().UIColor["Logo Image"] = Setting.Image or Setting.Logo
     end
+
+    -- LogoImage: custom image for the floating toggle button
+    -- Usage: LogoImage = "rbxassetid://YOUR_ID_HERE"
+    if Setting.LogoImage then
+        getgenv().UIColor["Logo Image"] = Setting.LogoImage
+        -- Update the floating button image immediately (already rendered)
+        imgHide.Image = Setting.LogoImage
+    end
     
 	local djtmemay = false
 	cac = false
