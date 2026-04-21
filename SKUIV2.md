@@ -57,7 +57,6 @@ end
 ```lua
 local Button = Tab:Button({ 
       Title = "Button", 
-      Desc = "...", 
      Callback = function() 
 
 end 
@@ -66,7 +65,6 @@ end
 ```lua
 local Button = Section:Button({ 
       Title = "Button", 
-      Desc = "...", 
      Callback = function() 
 
 end 
