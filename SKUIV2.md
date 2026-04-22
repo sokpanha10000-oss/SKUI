@@ -1,5 +1,5 @@
 # ✨SKUIV2✨
-**BANANA STYLE** This is V2 of my UI Library.
+This is V2 of my UI Library.
 If you don't use Section also working.
 Good Bye
 
@@ -14,7 +14,15 @@ local Window = Library:CreateWindow({
     Title = "My Banana Cat Style Hub",
     Desc = "Custom Hub - No Section Version",
     Author = " By STEVEKHMER",
+})
+```
+```lua
+local Window = Library:CreateWindow({
+    Title = "My Banana Cat Style Hub",
+    Desc = "Custom Hub - No Section Version",
+    Author = " By STEVEKHMER",
     LogoImage = "LogoImage Id",
+    WindowColor = "Red",
 })
 ```
 
