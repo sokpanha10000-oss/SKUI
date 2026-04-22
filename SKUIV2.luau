@@ -455,9 +455,60 @@ function Library:CreateWindow(Setting)
     -- Usage: LogoImage = "rbxassetid://YOUR_ID_HERE"
     if Setting.LogoImage then
         getgenv().UIColor["Logo Image"] = Setting.LogoImage
-        -- Update the floating button image immediately (already rendered)
         imgHide.Image = Setting.LogoImage
     end
+
+    -- =====================================================
+    -- WindowColor: theme accent color preset
+    -- Usage: WindowColor = "Red"
+    -- Supported: "Red","Blue","Green","Purple","Orange","Pink","Cyan"
+    -- If omitted the original gold/yellow theme is kept.
+    --
+    -- Affects ALL accent-colored UI pieces:
+    --   • Window border glow & title text
+    --   • Tab selected indicator dot
+    --   • Section underline
+    --   • Toggle border & check fill
+    --   • Button highlight
+    --   • Dropdown selected highlight & check icon
+    --   • Slider bar fill & hover shade
+    --   • Search icon hover
+    --   • Textbox / Box highlight
+    -- =====================================================
+    local WindowColorPresets = {
+        -- name          primary                          darker variant
+        Red    = { Color3.fromRGB(220,  50,  50), Color3.fromRGB(180,  30,  30) },
+        Blue   = { Color3.fromRGB( 50, 140, 255), Color3.fromRGB( 35, 110, 210) },
+        Green  = { Color3.fromRGB( 50, 200,  80), Color3.fromRGB( 30, 160,  55) },
+        Purple = { Color3.fromRGB(160,  60, 220), Color3.fromRGB(130,  40, 185) },
+        Orange = { Color3.fromRGB(255, 140,  30), Color3.fromRGB(210, 110,  18) },
+        Pink   = { Color3.fromRGB(240,  80, 160), Color3.fromRGB(200,  55, 130) },
+        Cyan   = { Color3.fromRGB( 40, 200, 210), Color3.fromRGB( 25, 160, 175) },
+    }
+
+    if Setting.WindowColor then
+        local preset = WindowColorPresets[Setting.WindowColor]
+        if preset then
+            local primary = preset[1]
+            local darker  = preset[2]
+            -- All keys that carry the accent colour
+            getgenv().UIColor["Border Color"]                = primary
+            getgenv().UIColor["Title Text Color"]            = primary
+            getgenv().UIColor["Page Selected Color"]         = primary
+            getgenv().UIColor["Section Underline Color"]     = primary
+            getgenv().UIColor["Toggle Border Color"]         = primary
+            getgenv().UIColor["Button Color"]                = primary
+            getgenv().UIColor["Dropdown Selected Color"]     = primary
+            getgenv().UIColor["Textbox Highlight Color"]     = primary
+            getgenv().UIColor["Box Highlight Color"]         = primary
+            getgenv().UIColor["Slider Line Color"]           = primary
+            getgenv().UIColor["Search Icon Highlight Color"] = primary
+            -- Darker variant for hover / filled states
+            getgenv().UIColor["Dropdown Selected Check Color"] = darker
+            getgenv().UIColor["Slider Highlight Color"]        = darker
+        end
+    end
+    -- =====================================================
     
 	local djtmemay = false
 	cac = false
