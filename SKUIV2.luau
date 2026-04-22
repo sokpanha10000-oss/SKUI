@@ -503,6 +503,7 @@ function Library:CreateWindow(Setting)
             getgenv().UIColor["Box Highlight Color"]         = primary
             getgenv().UIColor["Slider Line Color"]           = primary
             getgenv().UIColor["Search Icon Highlight Color"] = primary
+            getgenv().UIColor["Click Effect Color"]          = primary
             -- Darker variant for hover / filled states
             getgenv().UIColor["Dropdown Selected Check Color"] = darker
             getgenv().UIColor["Slider Highlight Color"]        = darker
@@ -1422,7 +1423,7 @@ function Library:CreateWindow(Setting)
 				check.Name = "check"
 				check.Parent = checkbox
 				check.AnchorPoint = Vector2.new(0.5, 0.5)
-				check.BackgroundColor3 = Color3.fromRGB(255, 206, 27)
+				check.BackgroundColor3 = getgenv().UIColor["Toggle Border Color"]
 				check.Position = UDim2.new(0.5, 0, 0.5, 0)
 				local cac = 5
 				if Desc then
@@ -1664,7 +1665,7 @@ function Library:CreateWindow(Setting)
                     ripple.AnchorPoint = Vector2.new(0.5, 0.5)
                     ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
                     ripple.Size = UDim2.new(0, 0, 0, 0)
-                    ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    ripple.BackgroundColor3 = getgenv().UIColor["Click Effect Color"]
                     ripple.BackgroundTransparency = 0.6
                     ripple.ZIndex = 20
                     ripple.Parent = ClickArea_1
