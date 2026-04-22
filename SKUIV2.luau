@@ -1585,22 +1585,30 @@ function Library:CreateWindow(Setting)
              ClickArea_1.Name = "ClickArea"
              ClickArea_1.Parent = RowBG_1
              ClickArea_1.AnchorPoint = Vector2.new(1, 0.5)
-             ClickArea_1.BackgroundColor3 = Color3.fromRGB(255, 206, 27)
+             ClickArea_1.BackgroundColor3 = getgenv().UIColor["Button Color"]
              ClickArea_1.Position = UDim2.new(1, -8,0.5, 0)
              ClickArea_1.Size = UDim2.new(0, 94,0, 30)
-             ClickArea_1.ClipsDescendants = true  -- THÊM DÒNG NÀY: Ngăn ripple tràn ra
+             ClickArea_1.ClipsDescendants = true
              
              UICorner_3.Parent = ClickArea_1
              UICorner_3.CornerRadius = UDim.new(0,12)
              
-             UIGradient_1.Parent = ClickArea_1
-             UIGradient_1.Color = ColorSequence.new{
-                 ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 216, 77)), 
-                 ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 206, 27)), 
-                 ColorSequenceKeypoint.new(0.6, Color3.fromRGB(235, 186, 17)), 
-                 ColorSequenceKeypoint.new(1, Color3.fromRGB(215, 166, 7))
-             }
-             UIGradient_1.Rotation = 90
+             -- Build gradient dynamically from the current accent color
+             do
+                 local bc = getgenv().UIColor["Button Color"]
+                 local r, g, b = bc.R, bc.G, bc.B
+                 local function shade(f)
+                     return Color3.new(math.clamp(r*f,0,1), math.clamp(g*f,0,1), math.clamp(b*f,0,1))
+                 end
+                 UIGradient_1.Parent = ClickArea_1
+                 UIGradient_1.Color = ColorSequence.new{
+                     ColorSequenceKeypoint.new(0,   shade(1.18)),
+                     ColorSequenceKeypoint.new(0.4, shade(1.00)),
+                     ColorSequenceKeypoint.new(0.6, shade(0.90)),
+                     ColorSequenceKeypoint.new(1,   shade(0.80)),
+                 }
+                 UIGradient_1.Rotation = 90
+             end
              
              ImageLabel_1.Parent = ClickArea_1
              ImageLabel_1.AnchorPoint = Vector2.new(0.5, 0.5)
