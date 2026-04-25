@@ -1,7 +1,8 @@
 --[[
 ╔══════════════════════════════════════════════════════════════════╗
-║                  ftgs UI Library  v3.3                           ║
+║                  ftgs UI Library  v3.4                           ║
 ║  Built-in Icons · Key System · Themes · Resizable · Refresh     ║
+║  Glass UI · Icon-buttons · Search icon · Dropdown icon-close    ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                  ║
 ║  Icons are now BUILT-IN — no separate IconModule load needed!    ║
@@ -554,15 +555,21 @@ local function BuildDropdown(T)
 
     _DDCard=Instance.new("Frame"); _DDCard.Size=UDim2.new(0,290,0,0)
     _DDCard.AnchorPoint=Vector2.new(0.5,0.5); _DDCard.Position=UDim2.fromScale(0.5,0.5)
-    _DDCard.BackgroundColor3=T.Secondary; _DDCard.BorderSizePixel=0
+    _DDCard.BackgroundColor3=T.Secondary; _DDCard.BackgroundTransparency=0.12; _DDCard.BorderSizePixel=0
     _DDCard.ZIndex=501; _DDCard.ClipsDescendants=true; _DDCard.Parent=_DDLayer
-    Corner(_DDCard,14); NewStroke(_DDCard,T.BorderHi,1); Shadow(_DDCard,0.44)
+    Corner(_DDCard,14)
+    local _ddcStroke=Instance.new("UIStroke")
+    _ddcStroke.Color=Color3.fromRGB(255,255,255); _ddcStroke.Transparency=0.72
+    _ddcStroke.Thickness=1; _ddcStroke.Parent=_DDCard
+    Shadow(_DDCard,0.44)
 
     local Head=Instance.new("Frame"); Head.Size=UDim2.new(1,0,0,44)
-    Head.BackgroundColor3=T.Tertiary; Head.BorderSizePixel=0; Head.ZIndex=502; Head.Parent=_DDCard
+    Head.BackgroundColor3=T.Tertiary; Head.BackgroundTransparency=0.15
+    Head.BorderSizePixel=0; Head.ZIndex=502; Head.Parent=_DDCard
     Corner(Head,14)
     local HFix=Instance.new("Frame"); HFix.Size=UDim2.new(1,0,0,14); HFix.Position=UDim2.new(0,0,1,-14)
-    HFix.BackgroundColor3=T.Tertiary; HFix.BorderSizePixel=0; HFix.ZIndex=502; HFix.Parent=Head
+    HFix.BackgroundColor3=T.Tertiary; HFix.BackgroundTransparency=0.15
+    HFix.BorderSizePixel=0; HFix.ZIndex=502; HFix.Parent=Head
 
     local HPill=Instance.new("Frame"); HPill.Size=UDim2.new(0,3,0,20)
     HPill.Position=UDim2.new(0,14,0.5,-10); HPill.BackgroundColor3=T.Accent
@@ -576,9 +583,31 @@ local function BuildDropdown(T)
 
     _DDXBtn=Instance.new("TextButton"); _DDXBtn.Size=UDim2.new(0,24,0,24)
     _DDXBtn.Position=UDim2.new(1,-34,0.5,-12); _DDXBtn.BackgroundColor3=T.Border
-    _DDXBtn.Text="✕"; _DDXBtn.TextColor3=T.SubText; _DDXBtn.Font=Enum.Font.GothamBold
-    _DDXBtn.TextSize=11; _DDXBtn.BorderSizePixel=0; _DDXBtn.ZIndex=503; _DDXBtn.Parent=Head
+    _DDXBtn.Text=""; _DDXBtn.BorderSizePixel=0; _DDXBtn.ZIndex=503; _DDXBtn.Parent=Head
     Corner(_DDXBtn,12)
+    -- X icon for dropdown close button
+    local _ddxicd=_ResolveIcon("x")
+    if _ddxicd then
+        local _ddXImg=Instance.new("ImageLabel"); _ddXImg.Size=UDim2.new(0,12,0,12)
+        _ddXImg.Position=UDim2.new(0.5,-6,0.5,-6); _ddXImg.BackgroundTransparency=1
+        _ddXImg.Image=_ddxicd.Image
+        if _ddxicd.RectSize~=Vector2.new(0,0) then
+            _ddXImg.ImageRectSize=_ddxicd.RectSize; _ddXImg.ImageRectOffset=_ddxicd.RectPos
+        end
+        _ddXImg.ImageColor3=T.SubText; _ddXImg.ZIndex=504; _ddXImg.Parent=_DDXBtn
+    else
+        local _ddxfl=Instance.new("TextLabel"); _ddxfl.Size=UDim2.fromScale(1,1)
+        _ddxfl.BackgroundTransparency=1; _ddxfl.Text="✕"
+        _ddxfl.TextColor3=T.SubText; _ddxfl.Font=Enum.Font.GothamBold
+        _ddxfl.TextSize=11; _ddxfl.ZIndex=504; _ddxfl.Parent=_DDXBtn
+    end
+    -- Hover effect on dropdown X button
+    _DDXBtn.MouseEnter:Connect(function()
+        Tween(_DDXBtn,TweenInfo.new(0.1),{BackgroundColor3=T.BorderHi})
+    end)
+    _DDXBtn.MouseLeave:Connect(function()
+        Tween(_DDXBtn,TweenInfo.new(0.1),{BackgroundColor3=T.Border})
+    end)
 
     _DDScrV2=ScrollV2(_DDCard,UDim2.new(1,-8,1,-52),UDim2.new(0,4,0,48),
         {top=4,bottom=6,left=4,right=4},4,T.Accent)
@@ -976,8 +1005,8 @@ function Library:CreateWindow(config)
     config = config or {}
 
     local T       = Themes[config.Theme] or Themes.Dark
-    local W       = (config.Size or UDim2.fromOffset(550,340)).X.Offset
-    local H       = (config.Size or UDim2.fromOffset(550,340)).Y.Offset
+    local W       = (config.Size or UDim2.fromOffset(590,440)).X.Offset
+    local H       = (config.Size or UDim2.fromOffset(590,440)).Y.Offset
     local MINW    = config.MinSize and config.MinSize.X or 480
     local MINH    = config.MinSize and config.MinSize.Y or 320
     local MAXW    = config.MaxSize and config.MaxSize.X or 900
@@ -992,9 +1021,26 @@ function Library:CreateWindow(config)
     local Main=Instance.new("Frame"); Main.Name="MainWindow_ftgs"
     Main.Size=UDim2.fromOffset(W,H); Main.Position=UDim2.new(0.5,-W/2,0.5,-H/2)
     Main.BackgroundColor3=T.Bg
-    Main.BackgroundTransparency=config.Transparent and 0.06 or 0
+    Main.BackgroundTransparency=config.Transparent and 0.38 or 0.30  -- glass: see-through
     Main.BorderSizePixel=0; Main.ClipsDescendants=true; Main.Visible=false; Main.Parent=ScreenGui
-    Corner(Main,14); NewStroke(Main,T.Border); Shadow(Main,0.44)
+    Corner(Main,14)
+    -- Glass border: white-tinted stroke instead of plain colour
+    local _mainStroke=Instance.new("UIStroke")
+    _mainStroke.Color=Color3.fromRGB(255,255,255); _mainStroke.Transparency=0.68
+    _mainStroke.Thickness=1.5; _mainStroke.Parent=Main
+    Shadow(Main,0.44)
+    -- Glass shimmer: semi-transparent white overlay on top half
+    local _GlassSheen=Instance.new("Frame")
+    _GlassSheen.Name="GlassSheen"
+    _GlassSheen.Size=UDim2.new(1,0,0.5,0); _GlassSheen.Position=UDim2.new(0,0,0,0)
+    _GlassSheen.BackgroundColor3=Color3.fromRGB(255,255,255)
+    _GlassSheen.BackgroundTransparency=0.93; _GlassSheen.BorderSizePixel=0
+    _GlassSheen.ZIndex=0; _GlassSheen.Parent=Main; Corner(_GlassSheen,14)
+    local _GlassGrad=Instance.new("UIGradient")
+    _GlassGrad.Transparency=NumberSequence.new({
+        NumberSequenceKeypoint.new(0,0),
+        NumberSequenceKeypoint.new(1,1),
+    }); _GlassGrad.Rotation=90; _GlassGrad.Parent=_GlassSheen
 
     -- ── Background ───────────────────────────────
     if config.Background and config.Background~="" and config.Background~="rbxassetid://" then
@@ -1016,9 +1062,16 @@ function Library:CreateWindow(config)
 
     -- ── Title Bar ────────────────────────────────
     local TBar=Instance.new("Frame"); TBar.Size=UDim2.new(1,0,0,46)
-    TBar.BackgroundColor3=T.Secondary; TBar.BorderSizePixel=0; TBar.ZIndex=2; TBar.Parent=Main; Corner(TBar,14)
+    TBar.BackgroundColor3=T.Secondary; TBar.BackgroundTransparency=0.20
+    TBar.BorderSizePixel=0; TBar.ZIndex=2; TBar.Parent=Main; Corner(TBar,14)
     local TBFix=Instance.new("Frame"); TBFix.Size=UDim2.new(1,0,0,14); TBFix.Position=UDim2.new(0,0,1,-14)
-    TBFix.BackgroundColor3=T.Secondary; TBFix.BorderSizePixel=0; TBFix.ZIndex=2; TBFix.Parent=TBar
+    TBFix.BackgroundColor3=T.Secondary; TBFix.BackgroundTransparency=0.20
+    TBFix.BorderSizePixel=0; TBFix.ZIndex=2; TBFix.Parent=TBar
+    -- Subtle glass divider at bottom of title bar
+    local _TBarLine=Instance.new("Frame"); _TBarLine.Size=UDim2.new(1,-24,0,1)
+    _TBarLine.Position=UDim2.new(0,12,1,-1); _TBarLine.BackgroundColor3=Color3.fromRGB(255,255,255)
+    _TBarLine.BackgroundTransparency=0.78; _TBarLine.BorderSizePixel=0
+    _TBarLine.ZIndex=3; _TBarLine.Parent=TBar
 
     -- Window Icon (left of title bar)
     local titleStartX  = 14
@@ -1026,7 +1079,7 @@ function Library:CreateWindow(config)
 
     if winIconData then
         local WIco=Instance.new("ImageLabel"); WIco.Size=UDim2.new(0,18,0,18)
-        WIco.Position=UDim2.new(0,14,0.5,-9); WIco.AnchorPoint=Vector2.new(0,0.5)
+        WIco.Position=UDim2.new(0,14,0.5,0); WIco.AnchorPoint=Vector2.new(0,0.5)
         WIco.BackgroundTransparency=1; WIco.Image=winIconData.Image
         if winIconData.RectSize ~= Vector2.new(0,0) then
             WIco.ImageRectSize   = winIconData.RectSize
@@ -1053,13 +1106,33 @@ function Library:CreateWindow(config)
         Auth.ZIndex=3; Auth.Parent=TBar
     end
 
-    local function CtrlBtn(xOff,bg,lbl,tsz)
+    local function CtrlBtn(xOff,bg,iconName,fallbackTxt,fallbackSz)
         local b=Instance.new("TextButton"); b.Size=UDim2.new(0,26,0,26); b.Position=UDim2.new(1,xOff,0.5,-13)
-        b.BackgroundColor3=bg; b.Text=lbl; b.TextColor3=T.Text; b.Font=Enum.Font.GothamBold
-        b.TextSize=tsz or 11; b.BorderSizePixel=0; b.ZIndex=3; b.Parent=TBar; Corner(b,13); return b
+        b.BackgroundColor3=bg; b.Text=""; b.BorderSizePixel=0; b.ZIndex=3; b.Parent=TBar; Corner(b,13)
+        local icd=_ResolveIcon(iconName)
+        if icd then
+            local IL=Instance.new("ImageLabel"); IL.Size=UDim2.new(0,12,0,12)
+            IL.Position=UDim2.new(0.5,-6,0.5,-6); IL.BackgroundTransparency=1
+            IL.Image=icd.Image
+            if icd.RectSize~=Vector2.new(0,0) then
+                IL.ImageRectSize=icd.RectSize; IL.ImageRectOffset=icd.RectPos
+            end
+            IL.ImageColor3=T.Text; IL.ZIndex=4; IL.Parent=b
+        else
+            local fl=Instance.new("TextLabel"); fl.Size=UDim2.fromScale(1,1)
+            fl.BackgroundTransparency=1; fl.Text=fallbackTxt or "?"
+            fl.TextColor3=T.Text; fl.Font=Enum.Font.GothamBold
+            fl.TextSize=fallbackSz or 11; fl.ZIndex=4; fl.Parent=b
+        end
+        b.MouseEnter:Connect(function()
+            Tween(b,TweenInfo.new(0.1),{BackgroundColor3=Color3.new(
+                math.min(bg.R*1.22,1),math.min(bg.G*1.22,1),math.min(bg.B*1.22,1))})
+        end)
+        b.MouseLeave:Connect(function() Tween(b,TweenInfo.new(0.1),{BackgroundColor3=bg}) end)
+        return b
     end
-    local CloseBtn=CtrlBtn(-36,T.Danger,"✕")
-    local MiniBtn =CtrlBtn(-68,T.Warning,"–",16)
+    local CloseBtn=CtrlBtn(-36,T.Danger,"x","✕",11)
+    local MiniBtn =CtrlBtn(-68,T.Warning,"minus","–",16)
 
     MakeDraggable(Main,TBar)
 
@@ -1158,15 +1231,28 @@ function Library:CreateWindow(config)
     -- ── Sidebar ──────────────────────────────────
     local SideFrame=Instance.new("Frame"); SideFrame.Size=UDim2.new(0,SIDEW,1,-46)
     SideFrame.Position=UDim2.new(0,0,0,46); SideFrame.BackgroundColor3=T.Secondary
+    SideFrame.BackgroundTransparency=0.18
     SideFrame.BorderSizePixel=0; SideFrame.ZIndex=2; SideFrame.Parent=Main
 
     local searchQuery=""; local sideTopPad=8
     if not HIDESRCH then
         local SBar=Instance.new("Frame"); SBar.Size=UDim2.new(1,-16,0,28); SBar.Position=UDim2.new(0,8,0,8)
-        SBar.BackgroundColor3=T.Tertiary; SBar.BorderSizePixel=0; SBar.ZIndex=3; SBar.Parent=SideFrame
+        SBar.BackgroundColor3=T.Tertiary; SBar.BackgroundTransparency=0.15; SBar.BorderSizePixel=0; SBar.ZIndex=3; SBar.Parent=SideFrame
         Corner(SBar,7); NewStroke(SBar,T.Border)
-        local SIco=Instance.new("TextLabel"); SIco.Size=UDim2.new(0,24,1,0); SIco.BackgroundTransparency=1
-        SIco.Text="⌕"; SIco.TextColor3=T.SubText; SIco.Font=Enum.Font.GothamBold; SIco.TextSize=14; SIco.ZIndex=4; SIco.Parent=SBar
+        -- Search icon: prefer lucide "search", fallback to text glyph
+        local _sicd=_ResolveIcon("search")
+        if _sicd then
+            local SIco=Instance.new("ImageLabel"); SIco.Size=UDim2.new(0,14,0,14)
+            SIco.Position=UDim2.new(0,7,0.5,0); SIco.AnchorPoint=Vector2.new(0,0.5)
+            SIco.BackgroundTransparency=1; SIco.Image=_sicd.Image
+            if _sicd.RectSize~=Vector2.new(0,0) then
+                SIco.ImageRectSize=_sicd.RectSize; SIco.ImageRectOffset=_sicd.RectPos
+            end
+            SIco.ImageColor3=T.SubText; SIco.ZIndex=4; SIco.Parent=SBar
+        else
+            local SIco=Instance.new("TextLabel"); SIco.Size=UDim2.new(0,24,1,0); SIco.BackgroundTransparency=1
+            SIco.Text="⌕"; SIco.TextColor3=T.SubText; SIco.Font=Enum.Font.GothamBold; SIco.TextSize=14; SIco.ZIndex=4; SIco.Parent=SBar
+        end
         local STB=Instance.new("TextBox"); STB.Size=UDim2.new(1,-28,1,-4); STB.Position=UDim2.new(0,24,0,2)
         STB.BackgroundTransparency=1; STB.Text=""; STB.PlaceholderText="Search tabs..."
         STB.PlaceholderColor3=T.SubText; STB.TextColor3=T.Text; STB.Font=Enum.Font.Gotham; STB.TextSize=12
@@ -1186,7 +1272,8 @@ function Library:CreateWindow(config)
     if config.User and config.User.Enabled then
         local UP=Instance.new("Frame"); UP.Name="UserPanel"
         UP.Size=UDim2.new(0,SIDEW,0,56); UP.Position=UDim2.new(0,0,1,-56)
-        UP.BackgroundColor3=T.Secondary; UP.BorderSizePixel=0; UP.ZIndex=3; UP.Parent=Main
+        UP.BackgroundColor3=T.Secondary; UP.BackgroundTransparency=0.18
+        UP.BorderSizePixel=0; UP.ZIndex=3; UP.Parent=Main
         local UPL=Instance.new("Frame"); UPL.Size=UDim2.new(1,0,0,1)
         UPL.BackgroundColor3=T.Border; UPL.BorderSizePixel=0; UPL.ZIndex=3; UPL.Parent=UP
         local AVF=Instance.new("Frame"); AVF.Size=UDim2.new(0,34,0,34); AVF.Position=UDim2.new(0,10,0.5,-17)
