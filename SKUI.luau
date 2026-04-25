@@ -1,4 +1,4 @@
-qq--[[
+--[[
 ╔══════════════════════════════════════════════════════════════════╗
 ║                  ftgs UI Library  v3.4                           ║
 ║  Built-in Icons · Key System · Themes · Resizable · Refresh     ║
