@@ -3,7 +3,7 @@
 ## 📌 About
 - **SKUI** is a rebuilt and optimized version of **SK Library V3.4**.
 - It is now support Icons (lucide & etc...)
-- Fix Icon and New UI look like
+- Fix icon and new UI look like
 - The reason the UI is named **SK** is that it should be the name of the next generation of **SK Hub** UIs
 
 - 🔹 Made by **STEVEKHMER**  
