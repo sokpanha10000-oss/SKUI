@@ -555,7 +555,7 @@ local function BuildDropdown(T)
 
     _DDCard=Instance.new("Frame"); _DDCard.Size=UDim2.new(0,290,0,0)
     _DDCard.AnchorPoint=Vector2.new(0.5,0.5); _DDCard.Position=UDim2.fromScale(0.5,0.5)
-    _DDCard.BackgroundColor3=T.Secondary; _DDCard.BackgroundTransparency=0.12; _DDCard.BorderSizePixel=0
+    _DDCard.BackgroundColor3=T.Secondary; _DDCard.BackgroundTransparency=0; _DDCard.BorderSizePixel=0
     _DDCard.ZIndex=501; _DDCard.ClipsDescendants=true; _DDCard.Parent=_DDLayer
     Corner(_DDCard,14)
     local _ddcStroke=Instance.new("UIStroke")
@@ -564,11 +564,11 @@ local function BuildDropdown(T)
     Shadow(_DDCard,0.44)
 
     local Head=Instance.new("Frame"); Head.Size=UDim2.new(1,0,0,44)
-    Head.BackgroundColor3=T.Tertiary; Head.BackgroundTransparency=0.15
+    Head.BackgroundColor3=T.Tertiary; Head.BackgroundTransparency=0
     Head.BorderSizePixel=0; Head.ZIndex=502; Head.Parent=_DDCard
     Corner(Head,14)
     local HFix=Instance.new("Frame"); HFix.Size=UDim2.new(1,0,0,14); HFix.Position=UDim2.new(0,0,1,-14)
-    HFix.BackgroundColor3=T.Tertiary; HFix.BackgroundTransparency=0.15
+    HFix.BackgroundColor3=T.Tertiary; HFix.BackgroundTransparency=0
     HFix.BorderSizePixel=0; HFix.ZIndex=502; HFix.Parent=Head
 
     local HPill=Instance.new("Frame"); HPill.Size=UDim2.new(0,3,0,20)
@@ -1005,8 +1005,8 @@ function Library:CreateWindow(config)
     config = config or {}
 
     local T       = Themes[config.Theme] or Themes.Dark
-    local W       = (config.Size or UDim2.fromOffset(550,340)).X.Offset
-    local H       = (config.Size or UDim2.fromOffset(550,340)).Y.Offset
+    local W       = (config.Size or UDim2.fromOffset(590,440)).X.Offset
+    local H       = (config.Size or UDim2.fromOffset(590,440)).Y.Offset
     local MINW    = config.MinSize and config.MinSize.X or 480
     local MINH    = config.MinSize and config.MinSize.Y or 320
     local MAXW    = config.MaxSize and config.MaxSize.X or 900
@@ -1021,26 +1021,9 @@ function Library:CreateWindow(config)
     local Main=Instance.new("Frame"); Main.Name="MainWindow_ftgs"
     Main.Size=UDim2.fromOffset(W,H); Main.Position=UDim2.new(0.5,-W/2,0.5,-H/2)
     Main.BackgroundColor3=T.Bg
-    Main.BackgroundTransparency=config.Transparent and 0.38 or 0.30  -- glass: see-through
+    Main.BackgroundTransparency=1
     Main.BorderSizePixel=0; Main.ClipsDescendants=true; Main.Visible=false; Main.Parent=ScreenGui
-    Corner(Main,14)
-    -- Glass border: white-tinted stroke instead of plain colour
-    local _mainStroke=Instance.new("UIStroke")
-    _mainStroke.Color=Color3.fromRGB(255,255,255); _mainStroke.Transparency=0.68
-    _mainStroke.Thickness=1.5; _mainStroke.Parent=Main
-    Shadow(Main,0.44)
-    -- Glass shimmer: semi-transparent white overlay on top half
-    local _GlassSheen=Instance.new("Frame")
-    _GlassSheen.Name="GlassSheen"
-    _GlassSheen.Size=UDim2.new(1,0,0.5,0); _GlassSheen.Position=UDim2.new(0,0,0,0)
-    _GlassSheen.BackgroundColor3=Color3.fromRGB(255,255,255)
-    _GlassSheen.BackgroundTransparency=0.93; _GlassSheen.BorderSizePixel=0
-    _GlassSheen.ZIndex=0; _GlassSheen.Parent=Main; Corner(_GlassSheen,14)
-    local _GlassGrad=Instance.new("UIGradient")
-    _GlassGrad.Transparency=NumberSequence.new({
-        NumberSequenceKeypoint.new(0,0),
-        NumberSequenceKeypoint.new(1,1),
-    }); _GlassGrad.Rotation=90; _GlassGrad.Parent=_GlassSheen
+    Corner(Main,14); Shadow(Main,0.44)
 
     -- ── Background ───────────────────────────────
     if config.Background and config.Background~="" and config.Background~="rbxassetid://" then
@@ -1062,10 +1045,10 @@ function Library:CreateWindow(config)
 
     -- ── Title Bar ────────────────────────────────
     local TBar=Instance.new("Frame"); TBar.Size=UDim2.new(1,0,0,46)
-    TBar.BackgroundColor3=T.Secondary; TBar.BackgroundTransparency=0.20
+    TBar.BackgroundColor3=T.Secondary; TBar.BackgroundTransparency=0
     TBar.BorderSizePixel=0; TBar.ZIndex=2; TBar.Parent=Main; Corner(TBar,14)
     local TBFix=Instance.new("Frame"); TBFix.Size=UDim2.new(1,0,0,14); TBFix.Position=UDim2.new(0,0,1,-14)
-    TBFix.BackgroundColor3=T.Secondary; TBFix.BackgroundTransparency=0.20
+    TBFix.BackgroundColor3=T.Secondary; TBFix.BackgroundTransparency=0
     TBFix.BorderSizePixel=0; TBFix.ZIndex=2; TBFix.Parent=TBar
     -- Subtle glass divider at bottom of title bar
     local _TBarLine=Instance.new("Frame"); _TBarLine.Size=UDim2.new(1,-24,0,1)
@@ -1231,13 +1214,13 @@ function Library:CreateWindow(config)
     -- ── Sidebar ──────────────────────────────────
     local SideFrame=Instance.new("Frame"); SideFrame.Size=UDim2.new(0,SIDEW,1,-46)
     SideFrame.Position=UDim2.new(0,0,0,46); SideFrame.BackgroundColor3=T.Secondary
-    SideFrame.BackgroundTransparency=0.18
+    SideFrame.BackgroundTransparency=0
     SideFrame.BorderSizePixel=0; SideFrame.ZIndex=2; SideFrame.Parent=Main
 
     local searchQuery=""; local sideTopPad=8
     if not HIDESRCH then
         local SBar=Instance.new("Frame"); SBar.Size=UDim2.new(1,-16,0,28); SBar.Position=UDim2.new(0,8,0,8)
-        SBar.BackgroundColor3=T.Tertiary; SBar.BackgroundTransparency=0.15; SBar.BorderSizePixel=0; SBar.ZIndex=3; SBar.Parent=SideFrame
+        SBar.BackgroundColor3=T.Tertiary; SBar.BackgroundTransparency=0; SBar.BorderSizePixel=0; SBar.ZIndex=3; SBar.Parent=SideFrame
         Corner(SBar,7); NewStroke(SBar,T.Border)
         -- Search icon: prefer lucide "search", fallback to text glyph
         local _sicd=_ResolveIcon("search")
@@ -1272,7 +1255,7 @@ function Library:CreateWindow(config)
     if config.User and config.User.Enabled then
         local UP=Instance.new("Frame"); UP.Name="UserPanel"
         UP.Size=UDim2.new(0,SIDEW,0,56); UP.Position=UDim2.new(0,0,1,-56)
-        UP.BackgroundColor3=T.Secondary; UP.BackgroundTransparency=0.18
+        UP.BackgroundColor3=T.Secondary; UP.BackgroundTransparency=0
         UP.BorderSizePixel=0; UP.ZIndex=3; UP.Parent=Main
         local UPL=Instance.new("Frame"); UPL.Size=UDim2.new(1,0,0,1)
         UPL.BackgroundColor3=T.Border; UPL.BorderSizePixel=0; UPL.ZIndex=3; UPL.Parent=UP
