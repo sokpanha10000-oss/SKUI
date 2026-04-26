@@ -1005,8 +1005,8 @@ function Library:CreateWindow(config)
     config = config or {}
 
     local T       = Themes[config.Theme] or Themes.Dark
-    local W       = (config.Size or UDim2.fromOffset(590,440)).X.Offset
-    local H       = (config.Size or UDim2.fromOffset(590,440)).Y.Offset
+    local W       = (config.Size or UDim2.fromOffset(550,340)).X.Offset
+    local H       = (config.Size or UDim2.fromOffset(550,340)).Y.Offset
     local MINW    = config.MinSize and config.MinSize.X or 480
     local MINH    = config.MinSize and config.MinSize.Y or 320
     local MAXW    = config.MaxSize and config.MaxSize.X or 900
