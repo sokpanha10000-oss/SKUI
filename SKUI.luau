@@ -1303,6 +1303,11 @@ function Library:CreateWindow(config)
     local minimized   = false
     local _uiVisible  = false   -- set to true by _DoShow / ShowMain
 
+    -- _keyPending: true while KeySystem card is shown and not yet solved.
+    -- FloatBtns stay hidden until this flips to false.
+    local _keyPending = config.KeySystem ~= nil
+    local _floatBtns  = {}   -- all created FloatBtns, revealed on key success
+
     -- Shared open/close callbacks table — FloatBtn registers here so
     -- its label updates whenever something else opens/closes the UI.
     local _openCloseCbs = {}
@@ -1403,6 +1408,10 @@ function Library:CreateWindow(config)
         FB.Position = UDim2.new(0,16,0.5,70)
         FB.BackgroundColor3 = bg; FB.Text = ""
         FB.BorderSizePixel = 0; FB.ZIndex = 50; FB.Parent = ScreenGui
+        -- Hidden until KeySystem is solved (if active); visible immediately otherwise.
+        FB.Visible = not _keyPending
+        FB:SetAttribute("_btnW", btnW)   -- stored for pop-in tween width
+        table.insert(_floatBtns, FB)
         Corner(FB, 9)
         local FBStr = Instance.new("UIStroke"); FBStr.Color = Color3.fromRGB(255,255,255)
         FBStr.Transparency = 0.78; FBStr.Thickness = 1; FBStr.Parent = FB
@@ -1910,6 +1919,17 @@ function Library:CreateWindow(config)
 
     -- show window (uses shared state so FloatBtn / ToggleKey stay in sync)
     local function ShowMain()
+        -- First time after KeySystem: reveal all FloatBtns with a pop-in tween
+        if _keyPending then
+            _keyPending = false
+            for _, fb in ipairs(_floatBtns) do
+                local tw = fb:GetAttribute("_btnW") or 118
+                fb.Size    = UDim2.fromOffset(tw * 0.4, 0)
+                fb.Visible = true
+                Tween(fb, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                    {Size = UDim2.fromOffset(tw, 34)})
+            end
+        end
         _DoShow()
     end
 
