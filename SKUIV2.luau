@@ -451,11 +451,55 @@ function Library:CreateWindow(Setting)
         getgenv().UIColor["Logo Image"] = Setting.Image or Setting.Logo
     end
 
-    -- LogoImage: custom image for the floating toggle button
-    -- Usage: LogoImage = "rbxassetid://YOUR_ID_HERE"
+    -- =====================================================
+    -- LogoImage  — Floating button image
+    -- Accepts any of these formats:
+    --
+    --   1. Full Roblox Creator Store URL
+    --      "https://create.roblox.com/store/asset/12345678/Name"
+    --
+    --   2. Short store URL (asset ID as query / last segment)
+    --      "https://create.roblox.com/store/12345678"
+    --
+    --   3. rbxassetid URI  (passed straight through)
+    --      "rbxassetid://12345678"
+    --
+    --   4. Plain numeric ID string / number
+    --      "12345678"   or   12345678
+    --
+    -- The library auto-detects whichever form you use and always
+    -- converts it to a valid rbxassetid:// before applying.
+    -- =====================================================
     if Setting.LogoImage then
-        getgenv().UIColor["Logo Image"] = Setting.LogoImage
-        imgHide.Image = Setting.LogoImage
+        local raw = tostring(Setting.LogoImage)
+        local assetId = nil
+
+        -- Pattern 1: https://create.roblox.com/store/asset/ID/...
+        assetId = assetId or raw:match("create%.roblox%.com/store/asset/(%d+)")
+
+        -- Pattern 2: https://create.roblox.com/store/ID  (bare numeric segment)
+        assetId = assetId or raw:match("create%.roblox%.com/store/(%d+)")
+
+        -- Pattern 3: any URL that has /ID anywhere (e.g. web.roblox.com/catalog/ID)
+        assetId = assetId or raw:match("/(%d+)")
+
+        -- Pattern 4: rbxassetid://ID  — extract ID so we re-build cleanly
+        assetId = assetId or raw:match("rbxassetid://(%d+)")
+
+        -- Pattern 5: plain numeric string / number
+        assetId = assetId or raw:match("^(%d+)$")
+
+        local finalImage
+        if assetId then
+            finalImage = "rbxassetid://" .. assetId
+        else
+            -- Unrecognised format — use as-is and let Roblox sort it out
+            finalImage = raw
+            warn("[NousigiHub] LogoImage: could not parse asset ID from '" .. raw .. "', using raw value.")
+        end
+
+        getgenv().UIColor["Logo Image"] = finalImage
+        imgHide.Image                   = finalImage
     end
 
     -- =====================================================
