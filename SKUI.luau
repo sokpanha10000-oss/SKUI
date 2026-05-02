@@ -30,11 +30,22 @@ local Mouse          = LocalPlayer:GetMouse()
 --  ICON MODULE  (from uploaded Icons.lua)
 -- ─────────────────────────────────────────────────────────
 local function HttpGet(url)
-    if game.HttpGet then
-        return game:HttpGet(url)
-    else
-        return HttpService:GetAsync(url)
+    -- Try the executor-level game:HttpGet first (works in most exploits)
+    local ok, result = pcall(function()
+        return game:HttpGet(url, true)
+    end)
+    if ok and type(result) == "string" and #result > 0 then
+        return result
     end
+    -- Fallback: Roblox HttpService (requires HTTP enabled in studio / server)
+    ok, result = pcall(function()
+        return HttpService:GetAsync(url, true)
+    end)
+    if ok and type(result) == "string" and #result > 0 then
+        return result
+    end
+    warn("[SKUI] HttpGet failed for: " .. tostring(url))
+    return nil
 end
 
 local IconModule = (function()
@@ -165,13 +176,14 @@ local function IconImage(name, size, parent, color)
     return img
 end
 
--- Draggable helper
-local function MakeDraggable(frame, handle)
+-- Draggable helper  (threshold = 4 px so tiny clicks never nudge the frame)
+local function MakeDraggable(frame, handle, onDragEnd)
     handle = handle or frame
-    local drag, start, origin = false, nil, nil
+    local drag, start, origin, moved = false, nil, nil, false
     handle.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             drag   = true
+            moved  = false
             start  = i.Position
             origin = frame.Position
         end
@@ -179,15 +191,25 @@ local function MakeDraggable(frame, handle)
     UIS.InputChanged:Connect(function(i)
         if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
             local d = i.Position - start
-            frame.Position = UDim2.new(
-                origin.X.Scale, origin.X.Offset + d.X,
-                origin.Y.Scale, origin.Y.Offset + d.Y
-            )
+            if math.abs(d.X) > 4 or math.abs(d.Y) > 4 then moved = true end
+            if moved then
+                frame.Position = UDim2.new(
+                    origin.X.Scale, origin.X.Offset + d.X,
+                    origin.Y.Scale, origin.Y.Offset + d.Y
+                )
+            end
         end
     end)
     UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            local wasMoved = moved
+            drag  = false
+            moved = false
+            if wasMoved and onDragEnd then onDragEnd() end
+        end
     end)
+    -- Returns whether the last press resulted in a real drag
+    return function() return moved end
 end
 
 -- ─────────────────────────────────────────────────────────
@@ -812,25 +834,63 @@ function SKUI:CreateWindow(cfg)
     })
     task.spawn(function() IconModule.Apply(floatIcon, "menu") end)
 
-    MakeDraggable(FloatBtn)
+    -- ── FLOATING BUTTON: draggable + click-safe toggle ───────
+    -- Track drag state locally so MouseButton1Click won't fire after a drag
+    local _fbDrag, _fbStart, _fbOrigin, _fbMoved = false, nil, nil, false
+    FloatBtn.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            _fbDrag   = true
+            _fbMoved  = false
+            _fbStart  = i.Position
+            _fbOrigin = FloatBtn.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(i)
+        if _fbDrag and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local d = i.Position - _fbStart
+            if math.abs(d.X) > 4 or math.abs(d.Y) > 4 then _fbMoved = true end
+            if _fbMoved then
+                FloatBtn.Position = UDim2.new(
+                    _fbOrigin.X.Scale, _fbOrigin.X.Offset + d.X,
+                    _fbOrigin.Y.Scale, _fbOrigin.Y.Offset + d.Y
+                )
+            end
+        end
+    end)
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            _fbDrag = false
+        end
+    end)
 
     local uiVisible = true
+    -- ── UI SHOW / HIDE (comeback fix) ─────────────────────
+    -- _hideTask stores the pending task.delay so we can cancel it if the
+    -- user re-opens the window before the hide animation fully finishes.
+    local _hideTask = nil
+
     local function SetUI(visible)
         uiVisible = visible
+
+        -- Cancel any pending hide-task so it can't race against a re-open
+        if _hideTask then
+            task.cancel(_hideTask)
+            _hideTask = nil
+        end
+
         if visible then
+            -- Always start collapsed so the expand animation plays cleanly
+            Win.Size    = UDim2.fromOffset(winSize.X.Offset, 0)
             Win.Visible = true
             Tween(Win, { Size = winSize }, 0.28)
-            task.spawn(function()
-                IconModule.Apply(floatIcon, "x")
-            end)
+            task.spawn(function() IconModule.Apply(floatIcon, "x") end)
         else
             Tween(Win, { Size = UDim2.fromOffset(winSize.X.Offset, 0) }, 0.2)
-            task.delay(0.22, function()
+            _hideTask = task.delay(0.22, function()
                 Win.Visible = false
+                _hideTask   = nil
             end)
-            task.spawn(function()
-                IconModule.Apply(floatIcon, "menu")
-            end)
+            task.spawn(function() IconModule.Apply(floatIcon, "menu") end)
         end
     end
 
@@ -840,7 +900,10 @@ function SKUI:CreateWindow(cfg)
     FloatBtn.MouseLeave:Connect(function()
         Tween(FloatBtn, { BackgroundColor3 = T.FloatBG, Size = UDim2.fromOffset(42, 42) }, 0.12)
     end)
-    FloatBtn.MouseButton1Click:Connect(function() SetUI(not uiVisible) end)
+    -- Only toggle UI when the press was a genuine tap (not a drag)
+    FloatBtn.MouseButton1Click:Connect(function()
+        if not _fbMoved then SetUI(not uiVisible) end
+    end)
 
     -- Close button hides (same as float button close)
     CloseBtn.MouseButton1Click:Connect(function() SetUI(false) end)
