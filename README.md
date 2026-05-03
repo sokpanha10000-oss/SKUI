@@ -1,7 +1,7 @@
-# ✨ SKUI (SK Library V3.4.1)
+# ✨ SKUI (SK Library V3.5)
 
 ## 📌 About
-- **SKUI** is a rebuilt and optimized version of **SK Library V3.4.1**.
+- **SKUI** is a rebuilt and optimized version of **SK Library V3.5**.
 - It is now support Icons (lucide & etc...)
 - Fix icon and new UI look like
 - The reason the UI is named **SK** is that it should be the name of the next generation of **SK Hub** UIs
@@ -91,6 +91,7 @@ local Window = SKUI:CreateWindow({
     },
 })
 ```
+
 ### Color Window
 ```lua
 Dark
@@ -105,6 +106,23 @@ local MinimizeBtn = Window:CreateMinimizeBtn({
   Title = "Open UI",
   Icon = "bird",
   Color = "Red",
+})
+```
+
+### Edit MinimizeBtn
+```lua
+Window:EditMinimizeBtn({
+    Title = "Open Example UI",
+    Icon = "monitor",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new( -- gradient
+        Color3.fromHex("FF0F7B"), 
+        Color3.fromHex("F89B29")
+    ),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true,
 })
 ```
 
