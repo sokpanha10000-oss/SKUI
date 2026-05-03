@@ -271,7 +271,7 @@ function Library:CreateWindow(cfg)
     -- ── Main Frame ─────────────────────────────────────────
     local main = New("Frame", {
         Name                 = "Main",
-        Size                 = UDim2.new(0, 640, 0, 440),
+        Size                 = UDim2.new(0, 540, 0, 340),
         Position             = UDim2.new(0.5,-320, 0.5,-220),
         BackgroundColor3     = T.BG,
         BackgroundTransparency = T.BgTrans,
