@@ -2691,20 +2691,21 @@ local function ShootLoop()
     end
 end
 
-Library = loadstring(game:HttpGet("https://pastefy.app/vgSGtrbP/raw"))()
+Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha10000-oss/SKUI/refs/heads/main/SKUIV2.luau"))()
 
 Window = Library:CreateWindow({
-    Title = "Banana Cat Hub",
-    Subtitle = "- Blox Fruit",
-    Image = "rbxassetid://130947856929902"
+    Title = "SK Hub",
+    Author = " By STEVEKHMER",
+    WindowColor = "Red",
 })
 
 wait(1)
 
-Library:Notify({
-    Title = "Ui Library",
-    Description = "The UI automatically hides once executed.\nPress the button at the bottom-left of the screen to show the GUI.",
-    Duration = 3
+Window:Notify({
+    Title    = "SK Hub",
+    Desc     = "The UI automatically hides once executed.\nPress the button at the bottom-left of the screen to show the GUI.",
+    ImageL   = "rbxassetid://128185233852701",  -- custom logo (optional)
+    Duration = 5                                 -- seconds (optional, default 10)
 })
 
 wait(0)
