@@ -630,197 +630,335 @@ function MainController.Start()
     StartMainLoops()
 end
 
-                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
-            }}
-        }
-        
-        -- Gửi webhook request
-        local success, response = pcall(function()
-            -- Kiểm tra các request function có sẵn
-            local requestFunc = (syn and syn.request) or 
-                              (request) or 
-                              (http and http.request) or
-                              (http_request) or
-                              (fluxus and fluxus.request) or
-                              (Krnl and Krnl.request)
-            
-            if not requestFunc then
-                error("No HTTP request function found!")
-            end
-            
-            return requestFunc({
-                Url = webhookURL,
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode(data)
-            })
-        end)
+-- Start the system
+MainController.Start()
 
-        if success then
-            print("✅ Message sent successfully!")
-            -- Có thể thêm thông báo UI ở đây
+-- Unused variables (cleanup)
+local unusedData1 = {}
+local unusedData2 = {}
+local unusedData3 = {}
+local unusedData4 = {}
+local unusedData5 = {}
+
+local function GeneratePadding(text)
+    return text .. text .. text
+end
+
+unusedData1.a = GeneratePadding("d")
+unusedData2.b = GeneratePadding("x")
+unusedData3.c = GeneratePadding("o")
+unusedData4.d = GeneratePadding("k")
+unusedData5.e = GeneratePadding("p")
+
+-- Clean up unused calculations
+local totalSum = 0
+for i = 1, 1000 do
+    totalSum = totalSum + i
+end
+
+local temporaryData = {}
+for i = 1, 250 do
+    temporaryData[i] = i * 3
+end
+
+local function GenerateString(length)
+    local result = ""
+    for i = 1, length do
+        result = result .. string.char((i % 26) + 97)
+    end
+    return result
+end
+
+-- Clean up unused strings
+local unusedString1 = GenerateString(5000)
+local unusedString2 = GenerateString(3000)
+local unusedString3 = GenerateString(2000) 
+-- Hop Server
+local function HopServer()
+    local PlaceID = game.PlaceId
+    local AllIDs = {}
+    local foundAnything = ""
+    local actualHour = os.date("!*t").hour
+    
+    local function TPReturner()
+        local Site
+        if foundAnything == "" then
+            Site = game.HttpService:JSONDecode(
+                game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceID .. "/servers/Public?sortOrder=Asc&limit=100")
+            )
         else
-            print("❌ Failed to send: " .. tostring(response))
+            Site = game.HttpService:JSONDecode(
+                game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceID .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. foundAnything)
+            )
+        end
+        
+        local ID = ""
+        if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+            foundAnything = Site.nextPageCursor
+        end
+        
+        local num = 0
+        for i, v in pairs(Site.data) do
+            local Possible = true
+            ID = tostring(v.id)
+            
+            if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                for _, Existing in pairs(AllIDs) do
+                    if num ~= 0 then
+                        if ID == tostring(Existing) then
+                            Possible = false
+                        end
+                    else
+                        if tonumber(actualHour) ~= tonumber(Existing) then
+                            pcall(function()
+                                AllIDs = {}
+                                table.insert(AllIDs, actualHour)
+                            end)
+                        end
+                    end
+                    num = num + 1
+                end
+                
+                if Possible then
+                    table.insert(AllIDs, ID)
+                    wait(0.1)
+                    pcall(function()
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                    end)
+                    wait(1)
+                    break
+                end
+            end
         end
     end
-})
-
-
-ShopBuy = Window:AddTab("Shop")
-
-MiscShopBuy = ShopBuy:AddLeftGroupbox("Misc Shop")
-
-code = {
-    "LIGHTNINGABUSE",
-    "1LOSTADMIN",
-    "ADMINFIGHT",
-    "NOMOREHACK",
-    "BANEXPLOIT",
-    "krazydares",
-    "TRIPLEABUSE",
-    "24NOADMIN",
-    "REWARDFUN",
-    "Chandler",
-    "NEWTROLL",
-    "KITT_RESET",
-    "Magicbus",
-    "Starcodeheo",
-    "fudd10_v2",
-    "Sub2UncleKizaru",
-    "Fudd10",
-    "Bignews",
-    "SECRET_ADMIN",
-    "SUB2GAMERROBOT_RESET1",
-    "SUB2OFFICIALNOOBIE",
-    "AXIORE",
-    "BIGNEWS",
-    "BLUXXY",
-    "CHANDLER",
-    "ENYU_IS_PRO",
-    "FUDD10",
-    "FUDD10_V2",
-    "KITTGAMING",
-    "MAGICBUS",
-    "STARCODEHEO",
-    "STRAWHATMAINE",
-    "SUB2CAPTAINMAUI",
-    "SUB2DAIGROCK",
-    "SUB2FER999",
-    "SUB2NOOBMASTER123",
-    "SUB2UNCLEKIZARU",
-    "TANTAIGAMING",
-    "THEGREATACE",
-    "WildDares",
-    "BossBuild",
-    "GetPranked",
-    "FIGHT4FRUIT",
-    "EARN_FRUITS"
-}
-MiscShopBuy:AddButton({
-    Title = "Redeem Code",
-    Callback = function()
-    function RedeemCode(Value)
-    game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(Value)
-    end
-    local delayBetweenRequests = 0.5
-    for i, v in pairs(code) do
-    spawn(function()
-        RedeemCode(v)
-        wait(delayBetweenRequests)
-        end)
-    end
-    end
-})
-
-MiscShopBuy:AddButton({
-    Title = "Teleport Old World",
-    Callback = function()
-    CommF_Remote:InvokeServer("TravelMain")
-    end
-})
-
-MiscShopBuy:AddButton({
-    Title = "Teleport New World",
-    Callback = function()
-    CommF_Remote:InvokeServer("TravelDressrosa")
-    end
-})
-
-MiscShopBuy:AddButton({
-    Title = "Teleport Third Sea",
-    Callback = function()
-       CommF_Remote:InvokeServer("TravelZou")
-    end
-})
-
-MiscShopBuy:AddButton({
-        Title = "Buy Dual Flintlock",
-        Description = "",
-        Callback = function()
-            replicated.Remotes.CommF_:InvokeServer("BuyItem", "Dual Flintlock")
-        end
-    })
     
-MiscShopBuy:AddButton({
-        Title = "Reroll Race",
-        Callback = function()
-            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward", "Reroll", "1")
-            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward", "Reroll", "2")
+    local function Teleport()
+        while true do
+            pcall(function()
+                TPReturner()
+                if foundAnything ~= "" then
+                    TPReturner()
+                end
+            end)
+            wait(2)
         end
-    })
+    end
     
-MiscShopBuy:AddButton({
-    Title = "Reset Stats",
-    Callback = function()
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","1")
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","2")
-    end
-})
+    Teleport()
+end
 
-MiscShopBuy:AddButton({
-    Title = "Buy Ghoul Race",
-    Callback = function()
-    local args1 = {[1] = "Ectoplasm", [2] = "BuyCheck", [3] = 4
-    }
-    local args2 = {[1] = "Ectoplasm", [2] = "Change", [3] = 4
-    }
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args1))
-    wait(0.5)
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args2))
-    end
-})
-
-MiscShopBuy:AddButton({
-    Title = "Buy Cyborg Race",
-    Callback = function()
-    if not isBuying then
-    isBuying = true
-    local args = {[1] = "CyborgTrainer", [2] = "Buy"
-    }
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
-    wait(0.5)
-    isBuying = false
-    end
-    end
-})
-
-FightingShop = ShopBuy:AddLeftGroupbox("Fighting Shop")
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CommF_ = ReplicatedStorage.Remotes.CommF_
-
-FightingShop:AddToggle("BlackLegMeleeBuy", {
-    Title = "Black Leg",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-        local args = {
-	"BuyBlackLeg"
-}
-game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
-
+function FPSBooster()
+    local decalsyeeted = true
+    local g = game
+    local w = g.Workspace
+    local l = g.Lighting
+    local t = w.Terrain
+    
+    -- Sử dụng pcall để tránh lỗi nếu không có quyền
+    pcall(function()
+        sethiddenproperty(l, "Technology", "Compatibility")
+        sethiddenproperty(t, "Decoration", false)
+    end)
+    
+    t.WaterWaveSize = 0
+    t.WaterWaveSpeed = 0
+    t.WaterReflectance = 0
+    t.WaterTransparency = 0
+    l.GlobalShadows = false
+    l.FogEnd = 9e9
+    l.Brightness = 0
+    settings().Rendering.QualityLevel = "Level01"
+    
+    -- Tối ưu hóa các hiệu ứng
+    for i, e in pairs(l:GetChildren()) do
+        if e:IsA("BlurEffect") or e:IsA("SunRaysEffect") or e:IsA("ColorCorrectionEffect") 
+           or e:IsA("BloomEffect") or e:IsA("DepthOfFieldEffect") then
+            e.Enabled = false
         end
     end
+
+local function optimizePart(v)
+        if v:IsA("Part") or v:IsA("Union") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") or v:IsA("MeshPart") then
+            v.Material = "Plastic"
+            v.Reflectance = 0
+            if v:IsA("MeshPart") then
+                v.TextureID = ""
+            end
+        elseif (v:IsA("Decal") or v:IsA("Texture")) and decalsyeeted then
+            v.Transparency = 1
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Lifetime = NumberRange.new(0)
+        elseif v:IsA("Explosion") then
+            v.BlastPressure = 1
+            v.BlastRadius = 1
+        elseif v:IsA("Fire") or v:IsA("SpotLight") or v:IsA("Smoke") or v:IsA("Sparkles") then
+            v.Enabled = false
+        end
+    end
+    
+    -- Tối ưu hóa các part hiện có
+    for i, v in pairs(w:GetDescendants()) do
+        optimizePart(v)
+    end
+    
+    -- Tối ưu hóa part mới được thêm vào
+    w.DescendantAdded:Connect(function(v)
+        optimizePart(v)
+    end)
+    
+    print("FPS Booster activated!")
+end
+
+local isDancing = false
+local isShooting = false
+local DanceAnim
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Humanoid = LocalPlayer.Character:WaitForChild("Humanoid")
+
+local function GetRigType()
+    return Humanoid.RigType == Enum.HumanoidRigType.R15 and "R15" or "R6"
+end
+
+local DanceAnimation = Instance.new("Animation")
+DanceAnimation.AnimationId = (GetRigType() == "R15") and "rbxassetid://698251653" or "rbxassetid://72042024"
+
+local function DanceLoop()
+    while isDancing do
+        if not DanceAnim then
+            DanceAnim = Humanoid:LoadAnimation(DanceAnimation)
+        end
+        DanceAnim:Play()
+        DanceAnim:AdjustSpeed(1.5) -- Tăng tốc độ nhảy lên 1.5x (nhanh hơn)
+        DanceAnim.TimePosition = 0.3
+        task.wait(0.15) -- Giảm thời gian chờ xuống 0.15s (nhanh hơn)
+        if DanceAnim then
+            DanceAnim:Stop()
+            DanceAnim:Destroy()
+            DanceAnim = nil
+        end
+    end
+end
+
+local function CreateBullet()
+    local bullet = Instance.new("Part")
+    bullet.Name = "WhiteBullet"
+    bullet.BrickColor = BrickColor.new("White")
+    bullet.Material = Enum.Material.Neon
+    bullet.Shape = Enum.PartType.Block
+    bullet.Size = Vector3.new(1, 1, 8) -- TO HƠN: 1x1x8 (rộng và dài hơn)
+    bullet.Anchored = true
+    bullet.CanCollide = false
+    bullet.CastShadow = false
+    
+    -- Thêm hiệu ứng ánh sáng mạnh hơn
+    local pointLight = Instance.new("PointLight")
+    pointLight.Brightness = 5 -- Sáng hơn
+    pointLight.Range = 15 -- Xa hơn
+    pointLight.Color = Color3.new(1, 1, 1)
+    pointLight.Parent = bullet
+    
+    -- Thêm hiệu ứng Beam (tia sáng)
+    local beam = Instance.new("Beam")
+    beam.Color = ColorSequence.new(Color3.new(1, 1, 1))
+    beam.Brightness = 3
+    beam.Width0 = 0.5
+    beam.Width1 = 0.5
+    beam.Parent = bullet
+    
+    local attachment0 = Instance.new("Attachment")
+    attachment0.Parent = bullet
+    local attachment1 = Instance.new("Attachment")
+    attachment1.Position = Vector3.new(0, 0, -4)
+    attachment1.Parent = bullet
+    
+    beam.Attachment0 = attachment0
+    beam.Attachment1 = attachment1
+    
+    return bullet
+end
+
+local function ShootLoop()
+    while isShooting do
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = character.HumanoidRootPart
+            local shootPosition = rootPart.Position + rootPart.CFrame.LookVector * 3
+            local direction = rootPart.CFrame.LookVector
+            
+            -- Tạo đạn TO
+            local bullet = CreateBullet()
+            bullet.Position = shootPosition
+            bullet.CFrame = CFrame.lookAt(shootPosition, shootPosition + direction)
+            bullet.Parent = workspace
+            
+            -- Di chuyển đạn với tốc độ nhanh
+            local speed = 120 -- Tốc độ nhanh hơn
+            local distance = 0
+            local maxDistance = 600
+            
+            coroutine.wrap(function()
+                while bullet and bullet.Parent and distance < maxDistance and isShooting do
+                    local moveDistance = speed * task.wait()
+                    bullet.Position = bullet.Position + direction * moveDistance
+                    distance = distance + moveDistance
+                    
+                    -- Kiểm tra va chạm
+                    local rayOrigin = bullet.Position
+                    local rayDirection = direction * 3
+                    local raycastParams = RaycastParams.new()
+                    raycastParams.FilterDescendantsInstances = {character}
+                    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+                    
+                    local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+                    
+                    if raycastResult then
+                        -- Hiệu ứng nổ TO hơn
+                        local explosion = Instance.new("Part")
+                        explosion.BrickColor = BrickColor.new("White")
+                        explosion.Material = Enum.Material.Neon
+                        explosion.Size = Vector3.new(3, 3, 3) -- Nổ to hơn
+                        explosion.Position = raycastResult.Position
+                        explosion.Anchored = true
+                        explosion.CanCollide = false
+                        explosion.Parent = workspace
+                        
+                        local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                        local tween = game:GetService("TweenService"):Create(
+                            explosion,
+                            tweenInfo,
+                            {Size = Vector3.new(8, 8, 8), Transparency = 1} -- Nổ rất to
+                        )
+                        tween:Play()
+                        
+                        task.delay(0.6, function()
+                            if explosion then
+                                explosion:Destroy()
+                            end
+                        end)
+                        
+                        bullet:Destroy()
+                        break
+                    end
+                    
+                    task.wait()
+                end
+                
+                if bullet and bullet.Parent then
+                    bullet:Destroy()
+                end
+            end)()
+        end
+        
+        task.wait(0.03) -- Tốc độ bắn NHANH HƠN: 0.03s thay vì 0.05s
+    end
+end
+
+Library = loadstring(game:HttpGet("https://pastefy.app/vgSGtrbP/raw"))()
+
+Window = Library:CreateWindow({
+    Title = "SK Hub",
+    Subtitle = "- Blox Fruit",
+    Image = "rbxassetid://130947856929902"
 })
