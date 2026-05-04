@@ -1,0 +1,826 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
+local Lighting = game:GetService("Lighting")
+local CollectionService = game:GetService("CollectionService")
+local Stats = game:GetService("Stats")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local CommF_Remote = Remotes:WaitForChild("CommF_")
+
+-- PLAYER
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui", 5)
+local MainGui = PlayerGui:WaitForChild("Main", 5)
+
+-- CHARACTER
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- FISHING
+local RFCraft = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RF/Craft")
+local FishReplicated = ReplicatedStorage:WaitForChild("FishReplicated")
+local FishingRequest = FishReplicated:WaitForChild("FishingRequest")
+local FishingConfig = require(FishReplicated.FishingClient.Config)
+local JobsRemoteFunction = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RF/JobsRemoteFunction")
+local JobToolAbilities = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RF/JobToolAbilities")
+local GetWaterHeightAtLocation = require(ReplicatedStorage.Util.GetWaterHeightAtLocation)
+
+-- WEBHOOK
+local reportWebhookURL = "https://discord.com/api/webhooks/1470044798202151134/4uLMDv_QBhalhhsoo9XnNEBmnLKOQ4xIhJgO91tTBBDwkZ3_eyojKnHWrmtfLoLHH1sZ"
+local ideasWebhookURL = "https://discord.com/api/webhooks/1470044798202151134/4uLMDv_QBhalhhsoo9XnNEBmnLKOQ4xIhJgO91tTBBDwkZ3_eyojKnHWrmtfLoLHH1sZ"
+
+-- EXPLOIT
+local executor = getexecutorname() or identifyexecutor()
+if executor then
+    if
+            string.find(executor, "Bunni") or 
+            string.find(executor, "FluxusZ") or 
+            string.find(executor, "Delta") or 
+            string.find(executor, "Arceus") or
+            string.find(executor, "Xeno") or
+            string.find(executor, "Swift") or
+            string.find(executor, "Awp") or
+            string.find(executor, "Volcano") or
+            string.find(executor, "Argon") or
+            string.find(executor, "Macsploit") or
+            string.find(executor, "Potassium") or
+            string.find(executor, "CodeX") or
+            string.find(executor, "Velocity") or
+            string.find(executor, "Romix")
+     then
+        print("ok")
+    else
+        game.Players.LocalPlayer:Kick("Please use Delta Exploit or PC use volcano or Exploit paid!")
+    end
+end
+
+function playDlg(id)
+    local rs = game:GetService("ReplicatedStorage")
+    local dlgCtrl = require(rs.DialogueController)
+    local dlgList = require(rs.DialoguesList)
+
+    for k, v in pairs(dlgList) do
+        if tostring(k) == id then
+            dlgCtrl:Start(v)
+        end
+    end
+end
+
+-- WORLD CHECK
+local placeId = game.PlaceId
+local World1 = game.PlaceId == 2753915549 or 85211729168715 or 73902483975735
+local World2 = game.PlaceId == 4442272183 or 79091703265657 or 73902483975735
+local World3 = game.PlaceId == 7449423635 or 85211729168715 or 73902483975735
+local Sea = World1 or World2 or World3
+
+-- GAME REFERENCES (giữ từ script cũ)
+local Enemies = Workspace.Enemies
+local replicated = ReplicatedStorage
+local plr = Player
+local Root = HumanoidRootPart
+local Lv = Player.Data.Level.Value
+local TeamSelf = Player.Team
+local Energy = Character.Energy.Value
+local vim1 = VirtualInputManager
+local vim2 = VirtualUser
+local TW = TweenService
+
+-- NOTIFICATION CONFIG
+local lastNotificationTime = 0
+local notificationCooldown = 10
+
+-- ALIASES để tương thích với code cũ
+local ply = Players
+local replicated = ReplicatedStorage
+local RunSer = RunService
+
+-- Khai báo với local
+local Boss = {}
+local BringConnections = {}
+local MaterialList = {}
+local NPCList = {}  
+local shouldTween = false
+local SoulGuitar = false
+local KenTest = true
+local debug = false
+local Brazier1 = false
+local Brazier2 = false
+local Brazier3 = false  
+local Sec = 0.1
+local ClickState = 0
+local Num_self = 25
+
+-- Team mặc định
+getgenv().Team = getgenv().Team or "Pirates"
+
+repeat 
+    local start = plr.PlayerGui:WaitForChild("Main"):WaitForChild("Loading") 
+    wait() 
+until start and game:IsLoaded()
+
+-- Thiết lập team
+if getgenv().Team == "Pirates" then
+    replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+elseif getgenv().Team == "Marines" then
+    replicated.Remotes.CommF_:InvokeServer("SetTeam", "Marines")
+else
+    replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+end
+
+local fruitsOnSale = {}
+local function addCommas(number)
+    local formatted = tostring(number)
+    while true do  
+        formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", '%1,%2')
+        if k == 0 then break end
+    end
+    return formatted
+end
+for _, fruitData in pairs(replicated.Remotes.CommF_:InvokeServer("GetFruits",true)) do
+    if fruitData["OnSale"] == true then
+        local priceWithCommas = addCommas(fruitData["Price"])
+        local fruitInfo = fruitData["Name"]
+        table.insert(fruitsOnSale, fruitInfo)
+    end
+end
+local Nms = {}
+for _, fruitData in pairs(replicated.Remotes.CommF_:InvokeServer("GetFruits",false)) do
+    if fruitData["OnSale"] == true then
+        local price = addCommas(fruitData["Price"])
+        local NormalInFO = fruitData["Name"]
+        table.insert(Nms, NormalInFO)
+    end
+end
+
+hookfunction(require(game:GetService("ReplicatedStorage"):WaitForChild("GuideModule")).ChangeDisplayedNPC, function() end)
+hookfunction(error, function() end)
+hookfunction(warn, function() end)
+
+-- Xóa Rocks
+Rock = workspace:FindFirstChild("Rocks")
+if Rock then 
+    Rock:Destroy()
+end
+
+-- Tối ưu lighting
+gay = (function()
+    local lightingLayers = Lighting:FindFirstChild("LightingLayers")
+    if lightingLayers and Lighting then
+        local darkFog = lightingLayers:FindFirstChild("DarkFog")
+        if darkFog then 
+            darkFog:Destroy() 
+        end
+    end
+    
+    Water = workspace._WorldOrigin["Foam;"]
+    if Water and workspace._WorldOrigin["Foam;"] then 
+        Water:Destroy() 
+    end        
+end)()
+
+-- Attack class
+Attack = {}
+Attack.__index = Attack
+
+Attack.Alive = function(model) 
+    if not model then return end 
+    Humanoid = model:FindFirstChild("Humanoid")
+    return Humanoid and Humanoid.Health > 0 
+end
+
+Attack.Pos = function(model, dist) 
+    return (Root.Position - model.Position).Magnitude <= dist 
+end
+
+Attack.Dist = function(model, dist) 
+    return (Root.Position - model:FindFirstChild("HumanoidRootPart").Position).Magnitude <= dist 
+end
+
+Attack.DistH = function(model, dist) 
+    return (Root.Position - model:FindFirstChild("HumanoidRootPart").Position).Magnitude > dist 
+end
+
+Attack.Kill = function(model, Succes)
+    if model and Succes then
+        if not model:GetAttribute("Locked") then 
+            model:SetAttribute("Locked", model.HumanoidRootPart.CFrame) 
+        end
+        PosMon = model:GetAttribute("Locked").Position
+        BringEnemy()
+        EquipWeapon(_G.SelectWeapon)
+        Equipped = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+        ToolTip = Equipped.ToolTip
+        
+        if ToolTip == "Blox Fruit" then 
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,10,0) * CFrame.Angles(0,math.rad(90),0)) 
+        else 
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,30,0) * CFrame.Angles(0,math.rad(180),0))
+        end
+        
+        if RandomCFrame then 
+            wait(.5)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) 
+            wait(.5)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0)) 
+            wait(.5)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30 ,0)) 
+            wait(.5)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) 
+            wait(.5)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0))
+        end
+    end
+end
+
+Attack.Kill2 = function(model, Succes)
+    if model and Succes then
+        if not model:GetAttribute("Locked") then 
+            model:SetAttribute("Locked", model.HumanoidRootPart.CFrame) 
+        end
+        PosMon = model:GetAttribute("Locked").Position
+        BringEnemy()
+        EquipWeapon(_G.SelectWeapon)
+        Equipped = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+        ToolTip = Equipped.ToolTip
+        
+        if ToolTip == "Blox Fruit" then 
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,10,0) * CFrame.Angles(0,math.rad(90),0)) 
+        else 
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,30,8) * CFrame.Angles(0,math.rad(180),0))
+        end
+        
+        if RandomCFrame then 
+            wait(0.1)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) 
+            wait(0.1)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0)) 
+            wait(0.1)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30 ,0)) 
+            wait(0.1)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) 
+            wait(0.1)
+            _tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0))
+        end
+    end
+end
+
+    
+    if weapon == "nil" and skill == "Y" then
+        vim1:SendKeyEvent(true, "Y", false, game)
+        vim1:SendKeyEvent(false, "Y", false, game)
+    end
+end
+
+-- Hook __namecall
+gg = getrawmetatable(game)
+old = gg.__namecall
+setreadonly(gg, false)
+
+gg.__namecall = newcclosure(function(...)
+    local method = getnamecallmethod()
+    local args = {...}    
+    if tostring(method) == "FireServer" then
+        if tostring(args[1]) == "RemoteEvent" then
+            if tostring(args[2]) ~= "true" and tostring(args[2]) ~= "false" then
+                if (_G.FarmMastery_G and not SoulGuitar) or (_G.FarmMastery_Dev) or (_G.FarmBlazeEM) or (_G.Prehis_Skills) or (_G.SeaBeast1 or _G.FishBoat or _G.PGB or _G.Leviathan1 or _G.Complete_Trials) or (_G.AimMethod and ABmethod == "AimBots Skill") or (_G.AimMethod and ABmethod == "Auto Aimbots") then
+                    args[2] = MousePos
+                    return old(unpack(args))
+                end
+            end
+        end
+    end
+    return old(...)
+end)
+
+GetConnectionEnemies = function(a)
+    for i,v in pairs(replicated:GetChildren()) do
+        if v:IsA("Model") and ((typeof(a) == "table" and table.find(a, v.Name)) or v.Name == a) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            return v
+        end
+    end
+    
+    for i,v in next, game.Workspace.Enemies:GetChildren() do
+        if v:IsA("Model") and ((typeof(a) == "table" and table.find(a, v.Name)) or v.Name == a) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            return v
+        end
+    end
+end
+
+            end 
+            EquipWeapon(v3.Name) 
+            plr.Character:FindFirstChild(v3.Name).EatRemote:InvokeServer("Drop")
+        end
+    end
+    
+    for a,b2 in pairs(plr.Character:GetChildren()) do
+        if string.find(b2.Name, "Fruit") then 
+            EquipWeapon(b2.Name) 
+            wait(.1)
+            if plr.PlayerGui.Main.Dialogue.Visible == true then 
+                plr.PlayerGui.Main.Dialogue.Visible = false 
+            end 
+            EquipWeapon(b2.Name) 
+            plr.Character:FindFirstChild(b2.Name).EatRemote:InvokeServer("Drop")
+        end
+    end
+end
+
+GetBP = function(v)
+    return plr.Backpack:FindFirstChild(v) or plr.Character:FindFirstChild(v)
+end
+
+GetIn = function(Name)
+    for _ ,v1 in pairs(replicated.Remotes.CommF_:InvokeServer("getInventory")) do
+        if type(v1) == "table" then
+            if v1.Name == Name or plr.Character:FindFirstChild(Name) or plr.Backpack:FindFirstChild(Name) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+GetM = function(Name)
+    for _,tab in pairs(replicated.Remotes.CommF_:InvokeServer("getInventory")) do
+        if type(tab) == "table" then
+            if tab.Type == "Material" then
+                if tab.Name == Name then
+                    return tab.Count
+                end
+            end
+        end
+    end
+    return 0
+end
+
+GetWP = function(nametool)
+    for _,v4 in pairs(replicated.Remotes.CommF_:InvokeServer("getInventory")) do
+        if type(v4) == "table" then
+            if v4.Type == "Sword" then
+                if v4.Name == nametool or plr.Character:FindFirstChild(nametool) or plr.Backpack:FindFirstChild(nametool) then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+getInfinity_Ability = function(Method, Var)
+    if not Root then return end
+    if Method == "Soru" and Var then
+        for _,gc in next, getgc() do
+            if plr.Character.Soru then
+                if (typeof(gc) == "function") and (getfenv(gc).script == plr.Character.Soru) then
+                    for _, v in next, getupvalues(gc) do
+                        if (typeof(v) == "table") then
+                            repeat 
+                                wait(Sec) 
+                                v.LastUse = 0 
+                            until not Var or (plr.Character.Humanoid.Health <= 0)
+                        end
+                    end
+                end
+            end
+        end    
+    elseif Method == "Energy" and Var then
+        plr.Character.Energy.Changed:connect(function()
+            if Var then 
+                plr.Character.Energy.Value = Energy 
+            end 
+        end)
+    elseif Method == "Observation" and Var then
+        VisionRadius = plr.VisionRadius
+        VisionRadius.Value = math.huge
+    end
+end
+
+0.939684749, 0.00191645394, 0.999998152, -2.80422337e-05, -0.939682961, 0.00181045406, 0.342041939)
+				PosQBoss = CFrame.new(5191.86133, 2.84020686, 686.438721, -0.731384635, 0, 0.681965172, 0, 1, 0, -0.681965172, 0, -0.731384635)
+			elseif _G.FindBoss == "Swan" then
+				bMon = "Swan"
+				Qname = "ImpelQuest"
+				Qdata = 3;
+				PosB = CFrame.new(5325.09619, 7.03906584, 719.570679, -0.309060812, 0, 0.951042235, 0, 1, 0, -0.951042235, 0, -0.309060812)
+				PosQBoss = CFrame.new(5191.86133, 2.84020686, 686.438721, -0.731384635, 0, 0.681965172, 0, 1, 0, -0.681965172, 0, -0.731384635)
+			elseif _G.FindBoss == "Magma Admiral" then
+				bMon = "Magma Admiral"
+				Qname = "MagmaQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-5314.6220703125, 12.262420654297, 8517.279296875)
+				PosB = CFrame.new(-5765.8969726563, 82.92064666748, 8718.3046875)
+			elseif _G.FindBoss == "Fishman Lord" then
+				bMon = "Fishman Lord"
+				Qname = "FishmanQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(61122.65234375, 18.497442245483, 1569.3997802734)
+				PosB = CFrame.new(61260.15234375, 30.950881958008, 1193.4329833984)
+			elseif _G.FindBoss == "Wysper" then
+				bMon = "Wysper"
+				Qname = "SkyExp1Quest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-7861.947265625, 5545.517578125, -379.85974121094)
+				PosB = CFrame.new(-7866.1333007813, 5576.4311523438, -546.74816894531)
+			elseif _G.FindBoss == "Thunder God" then
+				bMon = "Thunder God"
+				Qname = "SkyExp2Quest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-7903.3828125, 5635.9897460938, -1410.923828125)
+				PosB = CFrame.new(-7994.984375, 5761.025390625, -2088.6479492188)
+			elseif _G.FindBoss == "Cyborg" then
+				bMon = "Cyborg"
+				Qname = "FountainQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(5258.2788085938, 38.526931762695, 4050.044921875)
+				PosB = CFrame.new(6094.0249023438, 73.770050048828, 3825.7348632813)
+			elseif _G.FindBoss == "Ice Admiral" then
+				bMon = "Ice Admiral"
+				Qdata = nil;
+				PosQBoss = CFrame.new(1266.08948, 26.1757946, -1399.57678, -0.573599219, 0, -0.81913656, 0, 1, 0, 0.81913656, 0, -0.573599219)
+				PosB = CFrame.new(1266.08948, 26.1757946, -1399.57678, -0.573599219, 0, -0.81913656, 0, 1, 0, 0.81913656, 0, -0.573599219)
+			elseif _G.FindBoss == "Greybeard" then
+				bMon = "Greybeard"
+				Qdata = nil;
+				PosQBoss = CFrame.new(-5081.3452148438, 85.221641540527, 4257.3588867188)
+				PosB = CFrame.new(-5081.3452148438, 85.221641540527, 4257.3588867188)
+			end
+		end;
+		if World2 then
+			if _G.FindBoss == "Diamond" then
+				bMon = "Diamond"
+				Qname = "Area1Quest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-427.5666809082, 73.313781738281, 1835.4208984375)
+				PosB = CFrame.new(-1576.7166748047, 198.59265136719, 13.724286079407)
+			elseif _G.FindBoss == "Jeremy" then
+				bMon = "Jeremy"
+				Qname = "Area2Quest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(636.79943847656, 73.413787841797, 918.00415039063)
+				PosB = CFrame.new(2006.9261474609, 448.95666503906, 853.98284912109)
+			elseif _G.FindBoss == "Fajita" then
+				bMon = "Fajita"
+				Qname = "MarineQuest3"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-2441.986328125, 73.359344482422, -3217.5324707031)
+				PosB = CFrame.new(-2172.7399902344, 103.32216644287, -4015.025390625)
+			elseif _G.FindBoss == "Don Swan" then
+				bMon = "Don Swan"
+				PosB = CFrame.new(2286.2004394531, 15.177839279175, 863.8388671875)
+			elseif _G.FindBoss == "Smoke Admiral" then
+				bMon = "Smoke Admiral"
+				Qname = "IceSideQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-5429.0473632813, 15.977565765381, -5297.9614257813)
+				PosB = CFrame.new(-5275.1987304688, 20.757257461548, -5260.6669921875)
+			elseif _G.FindBoss == "Awakened Ice Admiral" then
+				bMon = "Awakened Ice Admiral"
+				Qname = "FrostQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(5668.9780273438, 28.519989013672, -6483.3520507813)
+				PosB = CFrame.new(6403.5439453125, 340.29766845703, -6894.5595703125)
+			elseif _G.FindBoss == "Tide Keeper" then
+				bMon = "Tide Keeper"
+				Qname = "ForgottenQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-3053.9814453125, 237.18954467773, -10145.0390625)
+				PosB = CFrame.new(-3795.6423339844, 105.88877105713, -11421.307617188)
+			elseif _G.FindBoss == "Darkbeard" then
+				bMon = "Darkbeard"
+				Qdata = nil;
+				PosQBoss = CFrame.new(3677.08203125, 62.751937866211, -3144.8332519531)
+				PosB = CFrame.new(3677.08203125, 62.751937866211, -3144.8332519531)
+			elseif _G.FindBoss == "Cursed Captaim" then
+				bMon = "Cursed Captain"
+				Qdata = nil;
+				PosQBoss = CFrame.new(916.928589, 181.092773, 33422)
+				PosB = CFrame.new(916.928589, 181.092773, 33422)
+			elseif _G.FindBoss == "Order" then
+				bMon = "Order"
+				Qdata = nil;
+				PosQBoss = CFrame.new(-6217.2021484375, 28.047645568848, -5053.1357421875)
+				PosB = CFrame.new(-6217.2021484375, 28.047645568848, -5053.1357421875)
+			end
+		end;
+		if World3 then
+			if _G.FindBoss == "Stone" then
+				bMon = "Stone"
+				Qname = "PiratePortQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-289.76705932617, 43.819011688232, 5579.9384765625)
+				PosB = CFrame.new(-1027.6512451172, 92.404174804688, 6578.8530273438)
+			elseif _G.FindBoss == "Hydra Leader" then
+				bMon = "Hydra Leader"
+				Qname = "VenomCrewQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(5211.021484375, 1004.35778859375, 758.1847534179688)
+				PosB = CFrame.new(5821.89794921875, 1019.0950927734375, -73.71923065185547)
+			elseif _G.FindBoss == "Kilo Admiral" then
+				bMon = "Kilo Admiral"
+				Qname = "MarineTreeIsland"
+				Qdata = 3;
+				PosQBoss = CFrame.new(2179.3010253906, 28.731239318848, -6739.9741210938)
+				PosB = CFrame.new(2764.2233886719, 432.46154785156, -7144.4580078125)
+			elseif _G.FindBoss == "Captain Elephant" then
+				bMon = "Captain Elephant"
+				Qname = "DeepForestIsland"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-13232.682617188, 332.40396118164, -7626.01171875)
+				PosB = CFrame.new(-13376.7578125, 433.28689575195, -8071.392578125)
+			elseif _G.FindBoss == "Beautiful Pirate" then
+				bMon = "Beautiful Pirate"
+				Qname = "DeepForestIsland2"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-12682.096679688, 390.88653564453, -9902.1240234375)
+				PosB = CFrame.new(5283.609375, 22.56223487854, -110.78285217285)
+			elseif _G.FindBoss == "Cake Queen" then
+				bMon = "Cake Queen"
+				Qname = "IceCreamIslandQuest"
+				Qdata = 3;
+				PosQBoss = CFrame.new(-819.376709, 64.9259796, -10967.2832, -0.766061664, 0, 0.642767608, 0, 1, 0, -0.642767608, 0, -0.766061664)
+				PosB = CFrame.new(-678.648804, 381.353943, -11114.2012, -0.908641815, 0.00149294338, 0.41757378, 0.00837114919, 0.999857843, 0.0146408929, -0.417492568, 0.0167988986, -0.90852499)
+			elseif _G.FindBoss == "Longma" then
+				bMon = "Longma"
+				Qdata = nil;
+				PosQBoss = CFrame.new(-10238.875976563, 389.7912902832, -9549.7939453125)
+				PosB = CFrame.new(-10238.875976563, 389.7912902832, -9549.7939453125)
+			elseif _G.FindBoss == "Soul Reaper" then
+				bMon = "Soul Reaper"
+				Qdata = nil;
+				PosQBoss = CFrame.new(-9524.7890625, 315.80429077148, 6655.7192382813)
+				PosB = CFrame.new(-9524.7890625, 315.80429077148, 6655.7192382813)
+			end
+		end
+	end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    ScanFolder(Enemies)
+    ScanFolder(Characters)
+
+    local tool = character:FindFirstChildOfClass("Tool")
+    
+    if #hitTargets > 0 and tool and (tool:GetAttribute("WeaponType") == "Melee" or tool:GetAttribute("WeaponType") == "Sword") then
+        local seed = Modules.Net.seed:InvokeServer()
+        
+        local attackRemote = Net["RE/RegisterAttack"]
+        local hitRemote = Net["RE/RegisterHit"]
+        
+        attackRemote:FireServer()
+        
+        local targetHead = hitTargets[1][1]:FindFirstChild("Head")
+        if not targetHead then return end
+
+        hitRemote:FireServer(targetHead, hitTargets, {})
+        
+        if AttackRemoteTarget then
+            local remoteCode = "RE/RegisterHit"
+            local encryptionKey = math.floor(Workspace:GetServerTimeNow() / 10 % 10) + 1
+            
+            local encodedString = string.gsub(remoteCode, ".", function(char)
+                return string.char(bit32.bxor(string.byte(char), encryptionKey))
+            end)
+
+            local finalId = bit32.bxor(AttackRemoteId + 909090, seed * 2)
+            
+            cloneref(AttackRemoteTarget):FireServer(
+                encodedString,
+                finalId,
+                targetHead,
+                hitTargets
+            )
+        end
+    end
+end
+
+-- Camera Control
+local function DisableCameraShake()
+    local cameraModule = require(ReplicatedStorage.Util.CameraShaker)
+    cameraModule:Stop()
+end
+
+-- Main Loop Initialization
+local function StartMainLoops()
+    task.spawn(function()
+        while task.wait(FastAttackModule.Rate) do
+            FastAttackModule.ExecuteFastAttack()
+        end
+    end)
+
+    RunService.Heartbeat:Connect(function()
+        pcall(HitRegistrationModule.Execute)
+    end)
+end
+
+-- Main Controller
+function MainController.Start()
+    DisableCameraShake()
+    StartMainLoops()
+end
+
+                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        }
+        
+        -- Gửi webhook request
+        local success, response = pcall(function()
+            -- Kiểm tra các request function có sẵn
+            local requestFunc = (syn and syn.request) or 
+                              (request) or 
+                              (http and http.request) or
+                              (http_request) or
+                              (fluxus and fluxus.request) or
+                              (Krnl and Krnl.request)
+            
+            if not requestFunc then
+                error("No HTTP request function found!")
+            end
+            
+            return requestFunc({
+                Url = webhookURL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(data)
+            })
+        end)
+
+        if success then
+            print("✅ Message sent successfully!")
+            -- Có thể thêm thông báo UI ở đây
+        else
+            print("❌ Failed to send: " .. tostring(response))
+        end
+    end
+})
+
+
+ShopBuy = Window:AddTab("Shop")
+
+MiscShopBuy = ShopBuy:AddLeftGroupbox("Misc Shop")
+
+code = {
+    "LIGHTNINGABUSE",
+    "1LOSTADMIN",
+    "ADMINFIGHT",
+    "NOMOREHACK",
+    "BANEXPLOIT",
+    "krazydares",
+    "TRIPLEABUSE",
+    "24NOADMIN",
+    "REWARDFUN",
+    "Chandler",
+    "NEWTROLL",
+    "KITT_RESET",
+    "Magicbus",
+    "Starcodeheo",
+    "fudd10_v2",
+    "Sub2UncleKizaru",
+    "Fudd10",
+    "Bignews",
+    "SECRET_ADMIN",
+    "SUB2GAMERROBOT_RESET1",
+    "SUB2OFFICIALNOOBIE",
+    "AXIORE",
+    "BIGNEWS",
+    "BLUXXY",
+    "CHANDLER",
+    "ENYU_IS_PRO",
+    "FUDD10",
+    "FUDD10_V2",
+    "KITTGAMING",
+    "MAGICBUS",
+    "STARCODEHEO",
+    "STRAWHATMAINE",
+    "SUB2CAPTAINMAUI",
+    "SUB2DAIGROCK",
+    "SUB2FER999",
+    "SUB2NOOBMASTER123",
+    "SUB2UNCLEKIZARU",
+    "TANTAIGAMING",
+    "THEGREATACE",
+    "WildDares",
+    "BossBuild",
+    "GetPranked",
+    "FIGHT4FRUIT",
+    "EARN_FRUITS"
+}
+MiscShopBuy:AddButton({
+    Title = "Redeem Code",
+    Callback = function()
+    function RedeemCode(Value)
+    game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(Value)
+    end
+    local delayBetweenRequests = 0.5
+    for i, v in pairs(code) do
+    spawn(function()
+        RedeemCode(v)
+        wait(delayBetweenRequests)
+        end)
+    end
+    end
+})
+
+MiscShopBuy:AddButton({
+    Title = "Teleport Old World",
+    Callback = function()
+    CommF_Remote:InvokeServer("TravelMain")
+    end
+})
+
+MiscShopBuy:AddButton({
+    Title = "Teleport New World",
+    Callback = function()
+    CommF_Remote:InvokeServer("TravelDressrosa")
+    end
+})
+
+MiscShopBuy:AddButton({
+    Title = "Teleport Third Sea",
+    Callback = function()
+       CommF_Remote:InvokeServer("TravelZou")
+    end
+})
+
+MiscShopBuy:AddButton({
+        Title = "Buy Dual Flintlock",
+        Description = "",
+        Callback = function()
+            replicated.Remotes.CommF_:InvokeServer("BuyItem", "Dual Flintlock")
+        end
+    })
+    
+MiscShopBuy:AddButton({
+        Title = "Reroll Race",
+        Callback = function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward", "Reroll", "1")
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward", "Reroll", "2")
+        end
+    })
+    
+MiscShopBuy:AddButton({
+    Title = "Reset Stats",
+    Callback = function()
+    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","1")
+    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","2")
+    end
+})
+
+MiscShopBuy:AddButton({
+    Title = "Buy Ghoul Race",
+    Callback = function()
+    local args1 = {[1] = "Ectoplasm", [2] = "BuyCheck", [3] = 4
+    }
+    local args2 = {[1] = "Ectoplasm", [2] = "Change", [3] = 4
+    }
+    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args1))
+    wait(0.5)
+    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args2))
+    end
+})
+
+MiscShopBuy:AddButton({
+    Title = "Buy Cyborg Race",
+    Callback = function()
+    if not isBuying then
+    isBuying = true
+    local args = {[1] = "CyborgTrainer", [2] = "Buy"
+    }
+    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+    wait(0.5)
+    isBuying = false
+    end
+    end
+})
+
+FightingShop = ShopBuy:AddLeftGroupbox("Fighting Shop")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CommF_ = ReplicatedStorage.Remotes.CommF_
+
+FightingShop:AddToggle("BlackLegMeleeBuy", {
+    Title = "Black Leg",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+        local args = {
+	"BuyBlackLeg"
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
+
+        end
+    end
+})
