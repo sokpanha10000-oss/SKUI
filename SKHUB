@@ -2693,10 +2693,9 @@ end
 
 Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha10000-oss/SKUI/refs/heads/main/SKUIV2.luau"))()
 
-Window = Library:CreateWindow({
+local Window = Library:CreateWindow({
     Title = "SK Hub",
-    Subtitle = "- Blox Fruit",
-    Image = ""
+    Author = " By STEVEKHMER",
     WindowColor = "Green",
 })
 
