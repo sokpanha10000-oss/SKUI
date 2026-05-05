@@ -2695,8 +2695,9 @@ Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha100
 
 Window = Library:CreateWindow({
     Title = "SK Hub",
-    Author = " By STEVEKHMER",
-    WindowColor = "Red",
+    Subtitle = "- Blox Fruit",
+    Image = ""
+    WindowColor = "Green",
 })
 
 wait(1)
