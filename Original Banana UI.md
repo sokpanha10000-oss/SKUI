@@ -3,19 +3,25 @@
 local Library = loadstring(game:HttpGet("https://pastefy.app/21Kp3vvz/raw"))()
 ```
 
+## Window
+```
 local Window = Library:CreateWindow({
     Title = "Banana Ui Example",
     Subtitle = "All Elements",
     Image = "rbxassetid://128185233852701"
 })
+```
 
--- Create Tab
+### Tab
+```
 local MainTab = Window:AddTab("Main Menu")
-
--- Create GroupBox
+```
+### GroupBox
+```
 local MainGroup = MainTab:AddLeftGroupbox("All Features")
-
--- Toggle
+```
+#### Toggle
+```
 MainGroup:AddToggle("ExampleToggle", {
     Text = "Enable Feature",
     Default = false,
@@ -23,8 +29,10 @@ MainGroup:AddToggle("ExampleToggle", {
         print("Toggle is:", Value)
     end
 })
+```
 
--- Slider
+#### Slider
+```
 MainGroup:AddSlider("ExampleSlider", {
     Text = "Speed Multiplier",
     Min = 0,
@@ -35,8 +43,10 @@ MainGroup:AddSlider("ExampleSlider", {
         print("Slider value:", Value)
     end
 })
+```
 
--- Dropdown
+#### Dropdown
+```
 MainGroup:AddDropdown("ExampleDropdown", {
     Text = "Select Category",
     Default = 1,
@@ -45,8 +55,10 @@ MainGroup:AddDropdown("ExampleDropdown", {
         print("Dropdown selected:", Value)
     end
 })
+```
 
--- Input
+#### Input
+```
 MainGroup:AddInput("ExampleInput", {
     Text = "Custom Text",
     Default = "",
@@ -55,8 +67,10 @@ MainGroup:AddInput("ExampleInput", {
         print("Input text:", Value)
     end
 })
+```
 
--- Button
+#### Button
+```
 MainGroup:AddButton({
     Text = "Run Script",
     Func = function()
@@ -64,10 +78,13 @@ MainGroup:AddButton({
     end,
     DoubleClick = false
 })
+```
 
--- Load Notification
+### Notify
+```
 Library:Notify({
     Title = "Loaded",
     Description = "Everything is in one tab.",
     Duration = 3
 })
+```
