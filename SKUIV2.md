@@ -6,7 +6,7 @@
 
 # Get 🔘Start
 ```lua
-local Library = loadstring(game:HttpGet("https://pastefy.app/xiYJ6xht/raw"))()
+local Library = loadstring(game:HttpGet("https://pastefy.app/wf2aSq1t/raw"))()
 ```
 
 ## 📂Window
