@@ -15,6 +15,7 @@ local Window = Library:CreateWindow({
     Title = "Banana Ui Example",
     Subtitle = "All Elements",
     Image = "rbxassetid://128185233852701"
+    Color = "Red",
 })
 ```
 
