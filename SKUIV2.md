@@ -6,7 +6,7 @@
 
 # Get 🔘Start
 ```lua
-local Library = loadstring(game:HttpGet("https://pastefy.app/wf2aSq1t/raw"))()
+local Library = loadstring(game:HttpGet("https://pastefy.app/1kFFcTWj/raw"))()
 ```
 
 ## 📂Window
@@ -15,7 +15,6 @@ local Window = Library:CreateWindow({
     Title = "Banana Ui Example",
     Subtitle = "All Elements",
     Image = "rbxassetid://128185233852701"
-    Color = "Red",
 })
 ```
 
