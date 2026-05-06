@@ -2691,21 +2691,20 @@ local function ShootLoop()
     end
 end
 
-Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha10000-oss/SKUI/refs/heads/main/SKUIV2.luau"))()
+local Library = loadstring(game:HttpGet("https://pastefy.app/1kFFcTWj/raw"))()
 
 local Window = Library:CreateWindow({
     Title = "SK Hub",
-    Author = " By STEVEKHMER",
-    WindowColor = "Green",
+    Subtitle = "| By STEVEKHMER",
+    Image = "rbxassetid://128185233852701"
 })
 
 wait(1)
 
-Window:Notify({
-    Title    = "SK Hub",
-    Desc     = "The UI automatically hides once executed.\nPress the button at the bottom-left of the screen to show the GUI.",
-    ImageL   = "rbxassetid://128185233852701",  -- custom logo (optional)
-    Duration = 5                                 -- seconds (optional, default 10)
+Library:Notify({
+    Title = "Loaded",
+    Description = "The UI automatically hides once executed.\nPress the button at the bottom-left of the screen to show the GUI.",
+    Duration = 3
 })
 
 wait(0)
