@@ -75,6 +75,9 @@ MainGroup:AddDropdown("ExampleDropdown", {
     end
 })
 ```
+```
+Dropdown:Refresh({ "A", "B" })
+```
 
 #### ⚡Input
 ```lua
