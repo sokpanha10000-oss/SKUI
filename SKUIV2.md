@@ -1,167 +1,98 @@
 # ✨SKUIV2✨
-This is V2 of my UI Library.
-If you don't use Section also working.
-Good Bye
+- This is V2 of my UI Library.
+- If you don't use Section also working.
+- New and fix mistakes
+- Good Bye
 
 # Get 🔘Start
 ```lua
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha10000-oss/SKUI/refs/heads/main/SKUIV2.luau"))()
+local Library = loadstring(game:HttpGet("https://pastefy.app/xiYJ6xht/raw"))()
 ```
 
 ## 📂Window
 ```lua
 local Window = Library:CreateWindow({
-    Title = "My Banana Cat Style Hub",
-    Desc = "Custom Hub - No Section Version",
-    Author = " By STEVEKHMER",
-})
-```
-```lua
-local Window = Library:CreateWindow({
-    Title = "My Banana Cat Style Hub",
-    Desc = "Custom Hub - No Section Version",
-    Author = " By STEVEKHMER",
-    LogoImage = "LogoImage Id",
-    WindowColor = "Red",
+    Title = "Banana Ui Example",
+    Subtitle = "All Elements",
+    Image = "rbxassetid://128185233852701"
 })
 ```
 
 ### 📑Tab
 ```lua
-local Tab = Window:Tab({
-    Title = "Tab title",
-    Locked = false,
-})
+local MainTab = Window:AddTab("Main Menu")
 ```
+
+### 📦GroupBox
 ```lua
-local Section = Tab:Section({ 
-    Title = "Section title" 
-})
+local MainGroup = MainTab:AddLeftGroupbox("All Features")
 ```
 
 #### ⚡Toggle
 ```lua
-local Toggle  = Tab:Toggle({ 
-      Title = "Toggle", 
-      Desc = "...", 
-      Value = false, 
-     Callback = function(s) 
-
-end 
-})
-```
-```lua
-local Toggle  = Section:Toggle({ 
-      Title = "Toggle", 
-      Desc = "...", 
-      Value = false, 
-     Callback = function(s) 
-
-end 
+MainGroup:AddToggle("ExampleToggle", {
+    Text = "Enable Feature",
+    Default = false,
+    Callback = function(Value)
+        print("Toggle is:", Value)
+    end
 })
 ```
 
 #### ⚡Button
 ```lua
-local Button = Tab:Button({ 
-      Title = "Button", 
-     Callback = function() 
-
-end 
-})
-```
-```lua
-local Button = Section:Button({ 
-      Title = "Button", 
-     Callback = function() 
-
-end 
+MainGroup:AddButton({
+    Text = "Run Script",
+    Func = function()
+        print("Button executed!")
+    end,
+    DoubleClick = false
 })
 ```
 
  #### ⚡Slider
  ```lua
-local Slider = Tab:Slider({ 
-    Title = "Slider", 
-    Step = 1, 
-    Value = {
-      Min = 20,
-      Max = 120,
-      Default = 70
-      }, 
-     Callback = function(v) 
-
-end 
-})
-```
-```lua
-local Slider = Section:Slider({ 
-    Title = "Slider", 
-    Step = 1, 
-    Value = { 
-      Min = 20,
-      Max = 120,
-      Default = 70
-      }, 
-     Callback = function(v) 
-
-end 
+MainGroup:AddSlider("ExampleSlider", {
+    Text = "Speed Multiplier",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Rounding = 0,
+    Callback = function(Value)
+        print("Slider value:", Value)
+    end
 })
 ```
 
 #### ⚡Dropdown
 ```lua
-local Dropdown = Tab:Dropdown({ 
-    Title = "Dropdown", 
-    Values = {"A","B","C"}, 
-    Value = "A", 
-   Callback = function(o) 
-
-end 
+MainGroup:AddDropdown("ExampleDropdown", {
+    Text = "Select Category",
+    Default = 1,
+    Values = {"Option A", "Option B", "Option C"},
+    Callback = function(Value)
+        print("Dropdown selected:", Value)
+    end
 })
-```
-```lua
-local Dropdown = Section:Dropdown({ 
-    Title= "Dropdown", 
-    Values = {"A","B","C"}, 
-    Value = "A", 
-   Callback = function(o) 
-
-end 
-})
-```
-```lua
-Dropdown:Refresh(enabled and { "A", "B", "X" } or { "A", "B" })
 ```
 
 #### ⚡Input
 ```lua
-local Input = Tab:Input({ 
-    Title = "Input", 
-    Placeholder = "Enter text...", 
-    Value = "Default", 
-   Callback = function(t) 
-
-end 
-})
-```
-```lua
-local Input = Section:Input({ 
-    Title = "Input", 
-    Placeholder = "Enter text...", 
-    Value = "Default", 
-   Callback = function(t) 
-
-end 
+MainGroup:AddInput("ExampleInput", {
+    Text = "Custom Text",
+    Default = "",
+    Placeholder = "Type here...",
+    Callback = function(Value)
+        print("Input text:", Value)
+    end
 })
 ```
 
 #### ⚡Notify
 ```lua
-Window:Notify({
-    Title    = "SK Hub",
-    Desc     = "Thank you for using it",
-    ImageL   = "rbxassetid://128185233852701",  -- custom logo (optional)
-    Duration = 5                                 -- seconds (optional, default 10)
+Library:Notify({
+    Title = "Loaded",
+    Description = "Everything is in one tab.",
+    Duration = 3
 })
 ```
