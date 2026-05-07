@@ -183,6 +183,8 @@ AdvancedSection:AddKeybind("KeybindHold", {
 })
 ```
 
+### Button
+```
 -- Button
 AdvancedSection:AddButton({
     Title    = "Show Notification",
@@ -190,17 +192,26 @@ AdvancedSection:AddButton({
         Fluent:Notify({ Title = "Button", Content = "Clicked!", Duration = 3 })
     end,
 })
+```
 
+### Paragraph
+```
 -- Paragraph
 AdvancedSection:AddParagraph({
     Title   = "Information",
     Content = "This is a read‑only paragraph. It can contain long descriptions or help text."
 })
+```
 
+### Dialog Section
+```
 -- DIALOG DEMONSTRATION (DialogTab)
 
 local DialogSection = DialogTab:AddSection("Interactive Dialogs")
+```
 
+### Button
+```
 DialogSection:AddButton({
     Title = "Open Simple Dialog",
     Callback = function()
@@ -214,7 +225,8 @@ DialogSection:AddButton({
         })
     end,
 })
-
+```
+```
 DialogSection:AddButton({
     Title = "Dialog with Custom Callback",
     Callback = function()
@@ -230,7 +242,8 @@ DialogSection:AddButton({
         })
     end,
 })
-
+```
+```
 DialogSection:AddButton({
     Title = "Long Content Dialog",
     Callback = function()
@@ -243,15 +256,21 @@ DialogSection:AddButton({
         })
     end,
 }) 
+```
 
+```
 -- userinfo test (InfoTab)
 local InfoSection = InfoTab:AddSection("UserInfo Examples")
+```
 
+```
 InfoSection:AddParagraph({
     Title   = "Current Settings",
     Content = "This window uses UserInfoTop = true\nSee the top bar for user info.\nYou can also try UserInfo = true (bottom) in another window."
 })
+```
 
+```
 InfoSection:AddButton({
     Title = "Show UserInfo Bottom Example",
     Callback = function()
@@ -285,7 +304,9 @@ InfoSection:AddButton({
         SecondWindow:SelectTab(1)
     end,
 })
+```
 
+```
 -- Manager Setup
 
 SaveManager:SetLibrary(Fluent)
@@ -303,7 +324,9 @@ FloatingButtonManager:BuildConfigSection(SettingsTab)
 SaveManager:IgnoreThemeSettings()
 SaveManager:LoadAutoloadConfig()
 FloatingButtonManager:LoadAutoloadConfig()
+```
 
+```
 -- FLOATING BUTTON (open/minimize UI) -- optional 
 
 local OpenGui = Instance.new("ScreenGui")
@@ -348,14 +371,18 @@ end)
 OpenBtn.MouseButton1Click:Connect(function()
     if Window and Window.Minimize then Window:Minimize() end
 end)
+```
 
+```
 -- Notification 
 Fluent:Notify({
     Title    = "FluentModded",
     Content  = "example loaded!",
     Duration = 4,
 })
+```
 
+```
 -- Select the first tab
 Window:SelectTab(1)local BasicSection = MainTab:AddSection("Basic Controls")
 
