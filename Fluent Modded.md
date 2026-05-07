@@ -97,7 +97,7 @@ BasicSection:AddInput("MyInput", {
 ### Dropdown With Search
 ```
 -- Dropdown WITH search (default, NoSearch = false or omitted)
-AdvancedSection:AddDropdown("DropdownWithSearch", {
+BasicSection:AddDropdown("DropdownWithSearch", {
     Title    = "Dropdown (with search)",
     Values   = { "Apple", "Banana", "Cherry", "Date", "Elderberry" },
     Default  = "Apple",
@@ -112,7 +112,7 @@ AdvancedSection:AddDropdown("DropdownWithSearch", {
 ### Dropdown Normal
 ```
 -- Dropdown WITHOUT search (NoSearch = true)
-AdvancedSection:AddDropdown("DropdownNoSearch", {
+BasicSection:AddDropdown("DropdownNoSearch", {
     Title    = "Dropdown (NO search)",
     Values   = { "Red", "Green", "Blue", "Yellow" },
     Default  = "Red",
@@ -127,7 +127,7 @@ AdvancedSection:AddDropdown("DropdownNoSearch", {
 ### Dropdown Multi Select
 ```
 -- Multi‑select Dropdown (with search, because NoSearch not set)
-AdvancedSection:AddDropdown("MultiDropdown", {
+BasicSection:AddDropdown("MultiDropdown", {
     Title    = "Multi‑Select (with search)",
     Values   = { "Option 1", "Option 2", "Option 3", "Option 4" },
     Default  = { "Option 1", "Option 3" },  -- multiple defaults
@@ -141,7 +141,7 @@ AdvancedSection:AddDropdown("MultiDropdown", {
 ### Colorpicker
 ```
 -- Colorpicker
-AdvancedSection:AddColorpicker("MyColorpicker", {
+BasicSection:AddColorpicker("MyColorpicker", {
     Title        = "Pick a Color",
     Default      = Color3.fromRGB(255, 0, 0),
     Transparency = 0,
@@ -154,7 +154,7 @@ AdvancedSection:AddColorpicker("MyColorpicker", {
 ### keybind
 ```
 -- Keybind – Toggle mode (default)
-AdvancedSection:AddKeybind("KeybindToggle", {
+BasicSection:AddKeybind("KeybindToggle", {
     Title    = "Keybind (Toggle)",
     Default  = "LeftAlt",
     Mode     = "Toggle",   -- press to toggle on/off
@@ -167,7 +167,7 @@ AdvancedSection:AddKeybind("KeybindToggle", {
 ### keybind hold mode
 ```
 -- Keybind – Hold mode
-AdvancedSection:AddKeybind("KeybindHold", {
+BasicSection:AddKeybind("KeybindHold", {
     Title    = "Keybind (Hold)",
     Default  = "F",
     Mode     = "Hold",     -- stays true while held
@@ -180,7 +180,7 @@ AdvancedSection:AddKeybind("KeybindHold", {
 ### Button
 ```
 -- Button
-AdvancedSection:AddButton({
+BasicSection:AddButton({
     Title    = "Show Notification",
     Callback = function()
         
@@ -191,7 +191,7 @@ AdvancedSection:AddButton({
 ### Paragraph
 ```
 -- Paragraph
-AdvancedSection:AddParagraph({
+BasicSection:AddParagraph({
     Title   = "Information",
     Content = "This is a read‑only paragraph. It can contain long descriptions or help text."
 })
