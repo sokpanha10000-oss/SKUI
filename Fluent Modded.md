@@ -385,7 +385,9 @@ Fluent:Notify({
 ```
 -- Select the first tab
 Window:SelectTab(1)local BasicSection = MainTab:AddSection("Basic Controls")
+```
 
+```
 -- Toggle
 BasicSection:AddToggle("MyToggle", {
     Title    = "Enable Feature",
@@ -394,7 +396,9 @@ BasicSection:AddToggle("MyToggle", {
         print("[Toggle]", value)
     end,
 })
+```
 
+```
 -- Slider
 BasicSection:AddSlider("MySlider", {
     Title    = "Volume",
@@ -406,7 +410,9 @@ BasicSection:AddSlider("MySlider", {
         print("[Slider]", value)
     end,
 })
+```
 
+```
 -- Input
 BasicSection:AddInput("MyInput", {
     Title       = "Username",
@@ -417,10 +423,14 @@ BasicSection:AddInput("MyInput", {
         print("[Input]", value)
     end,
 })
+```
 
+```
 -- SECTION: ADVANCED COMPONENTS (MainTab)
 local AdvancedSection = MainTab:AddSection("Advanced")
+```
 
+```
 -- Dropdown WITH search (default, NoSearch = false or omitted)
 AdvancedSection:AddDropdown("DropdownWithSearch", {
     Title    = "Dropdown (with search)",
@@ -432,7 +442,9 @@ AdvancedSection:AddDropdown("DropdownWithSearch", {
         print("[Dropdown w/ search]", value)
     end,
 })
+```
 
+```
 -- Dropdown WITHOUT search (NoSearch = true)
 AdvancedSection:AddDropdown("DropdownNoSearch", {
     Title    = "Dropdown (NO search)",
@@ -444,7 +456,9 @@ AdvancedSection:AddDropdown("DropdownNoSearch", {
         print("[Dropdown no search]", value)
     end,
 })
+```
 
+```
 -- Multi‑select Dropdown (with search, because NoSearch not set)
 AdvancedSection:AddDropdown("MultiDropdown", {
     Title    = "Multi‑Select (with search)",
@@ -455,7 +469,9 @@ AdvancedSection:AddDropdown("MultiDropdown", {
         print("[Multi Dropdown] Selected:", value)
     end,
 })
+```
 
+```
 -- Colorpicker
 AdvancedSection:AddColorpicker("MyColorpicker", {
     Title        = "Pick a Color",
@@ -465,7 +481,9 @@ AdvancedSection:AddColorpicker("MyColorpicker", {
         print("[Color]", color)
     end,
 })
+```
 
+```
 -- Keybind – Toggle mode (default)
 AdvancedSection:AddKeybind("KeybindToggle", {
     Title    = "Keybind (Toggle)",
@@ -475,7 +493,9 @@ AdvancedSection:AddKeybind("KeybindToggle", {
         print("[Toggle Keybind] state:", toggled)
     end,
 })
+```
 
+```
 -- Keybind – Hold mode
 AdvancedSection:AddKeybind("KeybindHold", {
     Title    = "Keybind (Hold)",
@@ -485,7 +505,9 @@ AdvancedSection:AddKeybind("KeybindHold", {
         print("[Hold Keybind] holding:", held)
     end,
 })
+```
 
+```
 -- Button
 AdvancedSection:AddButton({
     Title    = "Show Notification",
@@ -493,17 +515,23 @@ AdvancedSection:AddButton({
         Fluent:Notify({ Title = "Button", Content = "Clicked!", Duration = 3 })
     end,
 })
+```
 
+```
 -- Paragraph
 AdvancedSection:AddParagraph({
     Title   = "Information",
     Content = "This is a read‑only paragraph. It can contain long descriptions or help text."
 })
+```
 
+```
 -- DIALOG DEMONSTRATION (DialogTab)
 
 local DialogSection = DialogTab:AddSection("Interactive Dialogs")
+```
 
+```
 DialogSection:AddButton({
     Title = "Open Simple Dialog",
     Callback = function()
@@ -517,7 +545,9 @@ DialogSection:AddButton({
         })
     end,
 })
+```
 
+```
 DialogSection:AddButton({
     Title = "Dialog with Custom Callback",
     Callback = function()
@@ -533,7 +563,9 @@ DialogSection:AddButton({
         })
     end,
 })
+```
 
+```
 DialogSection:AddButton({
     Title = "Long Content Dialog",
     Callback = function()
@@ -545,16 +577,22 @@ DialogSection:AddButton({
             }
         })
     end,
-}) 
+})
+```
 
+```
 -- userinfo test (InfoTab)
 local InfoSection = InfoTab:AddSection("UserInfo Examples")
+```
 
+```
 InfoSection:AddParagraph({
     Title   = "Current Settings",
     Content = "This window uses UserInfoTop = true\nSee the top bar for user info.\nYou can also try UserInfo = true (bottom) in another window."
 })
+```
 
+```
 InfoSection:AddButton({
     Title = "Show UserInfo Bottom Example",
     Callback = function()
@@ -588,7 +626,9 @@ InfoSection:AddButton({
         SecondWindow:SelectTab(1)
     end,
 })
+```
 
+```
 -- Manager Setup
 
 SaveManager:SetLibrary(Fluent)
@@ -606,7 +646,9 @@ FloatingButtonManager:BuildConfigSection(SettingsTab)
 SaveManager:IgnoreThemeSettings()
 SaveManager:LoadAutoloadConfig()
 FloatingButtonManager:LoadAutoloadConfig()
+```
 
+```
 -- FLOATING BUTTON (open/minimize UI) -- optional 
 
 local OpenGui = Instance.new("ScreenGui")
@@ -651,13 +693,18 @@ end)
 OpenBtn.MouseButton1Click:Connect(function()
     if Window and Window.Minimize then Window:Minimize() end
 end)
+```
 
+```
 -- Notification 
 Fluent:Notify({
     Title    = "FluentModded",
     Content  = "example loaded!",
     Duration = 4,
 })
+```
 
+```
 -- Select the first tab
 Window:SelectTab(1)
+```
