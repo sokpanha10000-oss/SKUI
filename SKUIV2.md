@@ -30,7 +30,7 @@ local MainGroup = MainTab:AddLeftGroupbox("All Features")
 
 #### ⚡Toggle
 ```lua
-MainGroup:AddToggle("ExampleToggle", {
+MainGroup:AddToggle({
     Text = "Enable Feature",
     Default = false,
     Callback = function(Value)
@@ -52,7 +52,7 @@ MainGroup:AddButton({
 
  #### ⚡Slider
  ```lua
-MainGroup:AddSlider("ExampleSlider", {
+MainGroup:AddSlider({
     Text = "Speed Multiplier",
     Min = 0,
     Max = 100,
@@ -66,7 +66,7 @@ MainGroup:AddSlider("ExampleSlider", {
 
 #### ⚡Dropdown
 ```lua
-MainGroup:AddDropdown("ExampleDropdown", {
+MainGroup:AddDropdown({
     Text = "Select Category",
     Default = 1,
     Values = {"Option A", "Option B", "Option C"},
@@ -81,7 +81,7 @@ Dropdown:Refresh({ "A", "B" })
 
 #### ⚡Input
 ```lua
-MainGroup:AddInput("ExampleInput", {
+MainGroup:AddInput({
     Text = "Custom Text",
     Default = "",
     Placeholder = "Type here...",
