@@ -94,12 +94,6 @@ BasicSection:AddInput("MyInput", {
 })
 ```
 
-### Section Advenced
-```
--- SECTION: ADVANCED COMPONENTS (MainTab)
-local AdvancedSection = MainTab:AddSection("Advanced")
-```
-
 ### Dropdown With Search
 ```
 -- Dropdown WITH search (default, NoSearch = false or omitted)
@@ -189,7 +183,7 @@ AdvancedSection:AddKeybind("KeybindHold", {
 AdvancedSection:AddButton({
     Title    = "Show Notification",
     Callback = function()
-        Fluent:Notify({ Title = "Button", Content = "Clicked!", Duration = 3 })
+        
     end,
 })
 ```
