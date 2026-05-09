@@ -1,11 +1,10 @@
---// Premium UI Library //--
---// Self-contained Luau, no external dependencies //--
+--// Premium Glass UI Library
+--// Full merged single-file version
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
-local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -14,34 +13,36 @@ local Library = {}
 Library.__index = Library
 Library._lastWindow = nil
 
-Library.ThemeList = {
-	BloodRed = {
+local Themes = {
+	["Blood Red"] = {
 		Accent = Color3.fromRGB(180, 10, 20),
 		Accent2 = Color3.fromRGB(255, 80, 90),
-		Top = Color3.fromRGB(14, 14, 16),
-		Panel = Color3.fromRGB(20, 20, 24),
-		Element = Color3.fromRGB(24, 24, 29),
+		Background = Color3.fromRGB(12, 12, 14),
+		Top = Color3.fromRGB(10, 10, 12),
+		Panel = Color3.fromRGB(18, 18, 22),
+		Element = Color3.fromRGB(25, 25, 30),
 		Element2 = Color3.fromRGB(30, 30, 36),
-		Glass = Color3.fromRGB(255, 255, 255),
-		Text = Color3.fromRGB(245, 245, 245),
-		SubText = Color3.fromRGB(175, 175, 175),
-		Stroke = Color3.fromRGB(255, 255, 255),
-		Shadow = Color3.fromRGB(0, 0, 0),
+		Text = Color3.fromRGB(255, 255, 255),
+		SubText = Color3.fromRGB(190, 190, 190),
+		Border = Color3.fromRGB(255, 255, 255),
 	},
 	Dark = {
 		Accent = Color3.fromRGB(120, 120, 255),
 		Accent2 = Color3.fromRGB(160, 160, 255),
-		Top = Color3.fromRGB(16, 16, 20),
-		Panel = Color3.fromRGB(22, 22, 28),
-		Element = Color3.fromRGB(28, 28, 34),
-		Element2 = Color3.fromRGB(34, 34, 40),
-		Glass = Color3.fromRGB(255, 255, 255),
-		Text = Color3.fromRGB(245, 245, 245),
-		SubText = Color3.fromRGB(170, 170, 170),
-		Stroke = Color3.fromRGB(255, 255, 255),
-		Shadow = Color3.fromRGB(0, 0, 0),
+		Background = Color3.fromRGB(12, 12, 14),
+		Top = Color3.fromRGB(10, 10, 12),
+		Panel = Color3.fromRGB(18, 18, 22),
+		Element = Color3.fromRGB(25, 25, 30),
+		Element2 = Color3.fromRGB(30, 30, 36),
+		Text = Color3.fromRGB(255, 255, 255),
+		SubText = Color3.fromRGB(190, 190, 190),
+		Border = Color3.fromRGB(255, 255, 255),
 	},
 }
+
+local function themeOf(name)
+	return Themes[name] or Themes["Blood Red"]
+end
 
 local function create(className, props)
 	local obj = Instance.new(className)
@@ -62,7 +63,7 @@ local function stroke(parent, color, thickness, transparency)
 	return create("UIStroke", {
 		Color = color or Color3.new(1, 1, 1),
 		Thickness = thickness or 1,
-		Transparency = transparency or 0.55,
+		Transparency = transparency or 0,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		Parent = parent,
 	})
@@ -78,12 +79,11 @@ local function padding(parent, top, bottom, left, right)
 	})
 end
 
-local function list(parent, fill, pad, sort)
+local function list(parent, pad)
 	return create("UIListLayout", {
-		FillDirection = fill or Enum.FillDirection.Vertical,
-		Padding = UDim.new(0, pad or 8),
-		SortOrder = sort or Enum.SortOrder.LayoutOrder,
 		Parent = parent,
+		Padding = UDim.new(0, pad or 8),
+		SortOrder = Enum.SortOrder.LayoutOrder,
 	})
 end
 
@@ -95,8 +95,8 @@ local function clamp(n, a, b)
 	return math.max(a, math.min(b, n))
 end
 
-local function makeDraggable(target, handle)
-	target.Active = true
+local function makeDraggable(frame, handle)
+	frame.Active = true
 	handle.Active = true
 
 	local dragging = false
@@ -105,7 +105,7 @@ local function makeDraggable(target, handle)
 
 	local function update(input)
 		local delta = input.Position - dragStart
-		target.Position = UDim2.new(
+		frame.Position = UDim2.new(
 			startPos.X.Scale,
 			startPos.X.Offset + delta.X,
 			startPos.Y.Scale,
@@ -118,8 +118,7 @@ local function makeDraggable(target, handle)
 			or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
-			startPos = target.Position
-
+			startPos = frame.Position
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
@@ -144,13 +143,6 @@ local function makeDraggable(target, handle)
 	end)
 end
 
-local function toTheme(name)
-	if typeof(name) == "string" and Library.ThemeList[name] then
-		return Library.ThemeList[name]
-	end
-	return Library.ThemeList.BloodRed
-end
-
 local WindowClass = {}
 WindowClass.__index = WindowClass
 
@@ -167,8 +159,8 @@ function Library:CreateWindow(opts)
 	selfWindow.TabWidth = opts.TabWidth or 160
 	selfWindow.Size = opts.Size or UDim2.fromOffset(480, 460)
 	selfWindow.Acrylic = opts.Acrylic ~= false
-	selfWindow.ThemeName = opts.Theme or "BloodRed"
-	selfWindow.Theme = toTheme(selfWindow.ThemeName)
+	selfWindow.ThemeName = opts.Theme or "Blood Red"
+	selfWindow.Theme = themeOf(selfWindow.ThemeName)
 	selfWindow.MinimizeKey = opts.MinimizeKey or Enum.KeyCode.LeftControl
 	selfWindow.UserInfoTop = opts.UserInfoTop ~= false
 	selfWindow.UserInfoTitle = opts.UserInfoTitle or LocalPlayer.DisplayName
@@ -180,18 +172,8 @@ function Library:CreateWindow(opts)
 	selfWindow._destroyed = false
 	selfWindow._blur = nil
 	selfWindow._minimizeBtn = nil
-	selfWindow._blurEnabled = false
 
-	local gui = create("ScreenGui", {
-		Name = "CustomUILibrary",
-		ResetOnSpawn = false,
-		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		IgnoreGuiInset = true,
-		Parent = PlayerGui,
-	})
-	selfWindow.Gui = gui
-
-	local function ensureBlur()
+	local function enableBlur()
 		if not selfWindow.Acrylic then
 			return
 		end
@@ -208,20 +190,29 @@ function Library:CreateWindow(opts)
 		selfWindow._blur = blur
 	end
 
-	local function removeBlur()
+	local function disableBlur()
 		if selfWindow._blur and selfWindow._blur.Parent then
 			selfWindow._blur:Destroy()
 		end
 		selfWindow._blur = nil
 	end
 
-	ensureBlur()
+	local gui = create("ScreenGui", {
+		Name = "CustomUILibrary",
+		ResetOnSpawn = false,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		IgnoreGuiInset = true,
+		Parent = PlayerGui,
+	})
+	selfWindow.Gui = gui
+
+	enableBlur()
 
 	local main = create("Frame", {
 		Name = "Main",
 		Parent = gui,
-		BackgroundColor3 = selfWindow.Theme.Glass,
-		BackgroundTransparency = 0.16,
+		BackgroundColor3 = selfWindow.Theme.Background,
+		BackgroundTransparency = 0.28,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
 		Size = selfWindow.Size,
@@ -229,9 +220,9 @@ function Library:CreateWindow(opts)
 	})
 	selfWindow.Main = main
 	round(main, 18)
-	stroke(main, selfWindow.Theme.Stroke, 1, 0.84)
+	stroke(main, Color3.fromRGB(255, 255, 255), 1, 0.72)
 
-	local shadow = create("ImageLabel", {
+	create("ImageLabel", {
 		Name = "Shadow",
 		Parent = main,
 		BackgroundTransparency = 1,
@@ -249,13 +240,13 @@ function Library:CreateWindow(opts)
 		Name = "TopBar",
 		Parent = main,
 		BackgroundColor3 = selfWindow.Theme.Top,
-		BackgroundTransparency = 0.12,
+		BackgroundTransparency = 0.22,
 		BorderSizePixel = 0,
 		Size = UDim2.new(1, 0, 0, 66),
 	})
 	selfWindow.TopBar = top
 	round(top, 18)
-	stroke(top, selfWindow.Theme.Stroke, 1, 0.88)
+	stroke(top, Color3.fromRGB(255, 255, 255), 1, 0.82)
 
 	create("Frame", {
 		Parent = top,
@@ -267,7 +258,7 @@ function Library:CreateWindow(opts)
 		ZIndex = 0,
 	})
 
-	local title = create("TextLabel", {
+	create("TextLabel", {
 		Parent = top,
 		BackgroundTransparency = 1,
 		Position = UDim2.new(0, 16, 0, 10),
@@ -278,9 +269,8 @@ function Library:CreateWindow(opts)
 		TextSize = 18,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
-	selfWindow.TitleLabel = title
 
-	local subtitle = create("TextLabel", {
+	create("TextLabel", {
 		Parent = top,
 		BackgroundTransparency = 1,
 		Position = UDim2.new(0, 16, 0, 34),
@@ -291,15 +281,14 @@ function Library:CreateWindow(opts)
 		TextSize = 13,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
-	selfWindow.SubTitleLabel = subtitle
 
 	local closeBtn = create("TextButton", {
 		Parent = top,
 		BackgroundColor3 = Color3.fromRGB(40, 18, 18),
-		BackgroundTransparency = 0.14,
+		BackgroundTransparency = 0.12,
 		BorderSizePixel = 0,
-		Text = "✕",
-		TextColor3 = Color3.fromRGB(255, 240, 240),
+		Text = tostring(opts.CloseIcon or "✕"),
+		TextColor3 = Color3.fromRGB(255, 245, 245),
 		Font = Enum.Font.GothamBold,
 		TextSize = 16,
 		Size = UDim2.fromOffset(34, 34),
@@ -307,7 +296,7 @@ function Library:CreateWindow(opts)
 		AutoButtonColor = false,
 	})
 	round(closeBtn, 10)
-	stroke(closeBtn, Color3.fromRGB(255, 120, 120), 1, 0.65)
+	stroke(closeBtn, Color3.fromRGB(255, 255, 255), 1, 0.72)
 
 	local content = create("Frame", {
 		Name = "Content",
@@ -323,14 +312,14 @@ function Library:CreateWindow(opts)
 		Name = "TabsPanel",
 		Parent = content,
 		BackgroundColor3 = selfWindow.Theme.Panel,
-		BackgroundTransparency = 0.12,
+		BackgroundTransparency = 0.18,
 		BorderSizePixel = 0,
 		Position = UDim2.new(0, 12, 0, 12),
 		Size = UDim2.new(0, selfWindow.TabWidth, 1, -24),
 	})
 	selfWindow.LeftPanel = left
 	round(left, 16)
-	stroke(left, selfWindow.Theme.Stroke, 1, 0.9)
+	stroke(left, Color3.fromRGB(255, 255, 255), 1, 0.88)
 
 	local right = create("Frame", {
 		Name = "PagePanel",
@@ -356,7 +345,7 @@ function Library:CreateWindow(opts)
 	})
 	selfWindow.RightScroll = rightScroll
 	padding(rightScroll, 4, 8, 4, 4)
-	list(rightScroll, Enum.FillDirection.Vertical, 10)
+	list(rightScroll, 10)
 
 	local tabsHeader = create("Frame", {
 		Parent = left,
@@ -369,13 +358,13 @@ function Library:CreateWindow(opts)
 	local userInfo = create("Frame", {
 		Parent = tabsHeader,
 		BackgroundColor3 = selfWindow.UserInfoColor,
-		BackgroundTransparency = 0.82,
+		BackgroundTransparency = 0.84,
 		BorderSizePixel = 0,
 		Size = UDim2.new(1, 0, 0, 60),
 		Visible = selfWindow.UserInfoTop,
 	})
 	round(userInfo, 14)
-	stroke(userInfo, selfWindow.Theme.Stroke, 1, 0.9)
+	stroke(userInfo, Color3.fromRGB(255, 255, 255), 1, 0.9)
 
 	local avatar = create("ImageLabel", {
 		Parent = userInfo,
@@ -425,13 +414,13 @@ function Library:CreateWindow(opts)
 		local searchFrame = create("Frame", {
 			Parent = tabsHeader,
 			BackgroundColor3 = selfWindow.Theme.Element,
-			BackgroundTransparency = 0.14,
+			BackgroundTransparency = 0.18,
 			BorderSizePixel = 0,
 			Position = UDim2.new(0, 0, 0, selfWindow.UserInfoTop and 72 or 8),
 			Size = UDim2.new(1, 0, 0, 32),
 		})
 		round(searchFrame, 10)
-		stroke(searchFrame, selfWindow.Theme.Stroke, 1, 0.92)
+		stroke(searchFrame, Color3.fromRGB(255, 255, 255), 1, 0.9)
 
 		create("TextLabel", {
 			Parent = searchFrame,
@@ -477,7 +466,7 @@ function Library:CreateWindow(opts)
 	})
 	selfWindow.TabsList = tabsList
 	padding(tabsList, 6, 8, 6, 6)
-	list(tabsList, Enum.FillDirection.Vertical, 8)
+	list(tabsList, 8)
 
 	local function applyTabFilter(text)
 		local lower = string.lower(text or "")
@@ -513,11 +502,12 @@ function Library:CreateWindow(opts)
 
 	function selfWindow:Notify(notify)
 		notify = notify or {}
-		local nGui = selfWindow.Gui
-		if not nGui then return end
+		if not selfWindow.Gui then
+			return
+		end
 
 		local holder = create("Frame", {
-			Parent = nGui,
+			Parent = selfWindow.Gui,
 			BackgroundColor3 = Color3.fromRGB(20, 20, 24),
 			BackgroundTransparency = 0.05,
 			BorderSizePixel = 0,
@@ -564,7 +554,9 @@ function Library:CreateWindow(opts)
 					Position = UDim2.new(1, 280, 0, 18),
 				})
 				task.wait(0.22)
-				if holder then holder:Destroy() end
+				if holder then
+					holder:Destroy()
+				end
 			end
 		end)
 	end
@@ -594,7 +586,13 @@ function Library:CreateWindow(opts)
 			ZIndex = 51,
 		})
 		round(popup, 16)
-		stroke(popup, selfWindow.Theme.Stroke, 1, 0.9)
+		stroke(popup, Color3.fromRGB(255, 255, 255), 1, 0.86)
+
+		local function closePopup()
+			if overlay and overlay.Parent then
+				overlay:Destroy()
+			end
+		end
 
 		create("TextLabel", {
 			Parent = popup,
@@ -602,7 +600,7 @@ function Library:CreateWindow(opts)
 			Position = UDim2.new(0, 14, 0, 10),
 			Size = UDim2.new(1, -28, 0, 20),
 			Font = Enum.Font.GothamBold,
-			Text = dropdown.Title or "Dropdown",
+			Text = (dropdown.Icon and tostring(dropdown.Icon) .. "  " or "") .. (dropdown.Title or "Dropdown"),
 			TextColor3 = selfWindow.Theme.Text,
 			TextSize = 16,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -615,7 +613,7 @@ function Library:CreateWindow(opts)
 			BackgroundTransparency = 0.12,
 			BorderSizePixel = 0,
 			Text = "✕",
-			TextColor3 = Color3.fromRGB(255, 240, 240),
+			TextColor3 = Color3.fromRGB(255, 245, 245),
 			Font = Enum.Font.GothamBold,
 			TextSize = 14,
 			Size = UDim2.fromOffset(28, 28),
@@ -624,21 +622,24 @@ function Library:CreateWindow(opts)
 			ZIndex = 52,
 		})
 		round(close, 10)
+		stroke(close, Color3.fromRGB(255, 255, 255), 1, 0.75)
+		close.Activated:Connect(closePopup)
 
 		local search
 		local listTop = 50
+
 		if not noSearch then
 			local searchFrame = create("Frame", {
 				Parent = popup,
-				BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-				BackgroundTransparency = 0.9,
+				BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+				BackgroundTransparency = 0.16,
 				BorderSizePixel = 0,
 				Position = UDim2.new(0, 14, 0, 38),
 				Size = UDim2.new(1, -28, 0, 30),
 				ZIndex = 52,
 			})
 			round(searchFrame, 10)
-			stroke(searchFrame, selfWindow.Theme.Stroke, 1, 0.94)
+			stroke(searchFrame, Color3.fromRGB(255, 255, 255), 1, 0.92)
 
 			create("TextLabel", {
 				Parent = searchFrame,
@@ -685,9 +686,11 @@ function Library:CreateWindow(opts)
 			ZIndex = 52,
 		})
 		padding(scroll, 2, 2, 2, 2)
-		list(scroll, Enum.FillDirection.Vertical, 8)
+		list(scroll, 8)
 
+		local optionButtons = {}
 		local selection = {}
+
 		if multi then
 			if typeof(defaultValue) == "table" then
 				for _, v in ipairs(defaultValue) do
@@ -724,8 +727,6 @@ function Library:CreateWindow(opts)
 			end
 		end
 
-		local optionButtons = {}
-
 		local function refreshVisible(filterText)
 			local lower = string.lower(filterText or "")
 			for _, item in ipairs(optionButtons) do
@@ -739,7 +740,7 @@ function Library:CreateWindow(opts)
 			local itemBtn = create("TextButton", {
 				Parent = scroll,
 				BackgroundColor3 = selfWindow.Theme.Element2,
-				BackgroundTransparency = 0.1,
+				BackgroundTransparency = 0.08,
 				BorderSizePixel = 0,
 				Size = UDim2.new(1, 0, 0, 34),
 				Font = Enum.Font.Gotham,
@@ -748,28 +749,34 @@ function Library:CreateWindow(opts)
 				ZIndex = 53,
 			})
 			round(itemBtn, 10)
-			stroke(itemBtn, selfWindow.Theme.Stroke, 1, 0.95)
+			stroke(itemBtn, Color3.fromRGB(255, 255, 255), 1, 0.94)
 
-			local check = create("TextLabel", {
+			local itemText = create("TextLabel", {
 				Parent = itemBtn,
 				BackgroundTransparency = 1,
 				Position = UDim2.new(0, 10, 0, 0),
 				Size = UDim2.new(1, -20, 1, 0),
 				Font = Enum.Font.Gotham,
-				Text = multi and ((selection[vText] and "✓  " or "○  ") .. vText) or vText,
+				Text = data and data.Multi and ((selection[vText] and "✓  " or "○  ") .. vText) or vText,
 				TextColor3 = selfWindow.Theme.Text,
 				TextSize = 13,
 				TextXAlignment = Enum.TextXAlignment.Left,
 				ZIndex = 54,
 			})
 
-			itemBtn.MouseButton1Click:Connect(function()
+			itemBtn.Activated:Connect(function()
 				if multi then
 					selection[vText] = not selection[vText]
-					check.Text = (selection[vText] and "✓  " or "○  ") .. vText
-					local result = getCurrent()
+					itemText.Text = (selection[vText] and "✓  " or "○  ") .. vText
+					dropdown._selected = selection
 					syncButton()
 					if dropdown.Callback then
+						local result = {}
+						for _, vv in ipairs(values) do
+							if selection[tostring(vv)] then
+								table.insert(result, vv)
+							end
+						end
 						dropdown.Callback(result)
 					end
 				else
@@ -778,7 +785,7 @@ function Library:CreateWindow(opts)
 					if dropdown.Callback then
 						dropdown.Callback(value)
 					end
-					overlay:Destroy()
+					closePopup()
 				end
 			end)
 
@@ -793,19 +800,13 @@ function Library:CreateWindow(opts)
 			end)
 		end
 
-		syncButton()
-
-		close.MouseButton1Click:Connect(function()
-			overlay:Destroy()
-		end)
-
 		overlay.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				local mouse = UserInputService:GetMouseLocation()
 				local p = popup.AbsolutePosition
 				local s = popup.AbsoluteSize
 				if mouse.X < p.X or mouse.X > p.X + s.X or mouse.Y < p.Y or mouse.Y > p.Y + s.Y then
-					overlay:Destroy()
+					closePopup()
 				end
 			end
 		end)
@@ -826,7 +827,7 @@ function Library:CreateWindow(opts)
 			Text = "",
 		})
 		round(tabBtn, 11)
-		stroke(tabBtn, selfWindow.Theme.Stroke, 1, 0.93)
+		stroke(tabBtn, Color3.fromRGB(255, 255, 255), 1, 0.93)
 
 		local activeBar = create("Frame", {
 			Parent = tabBtn,
@@ -838,7 +839,7 @@ function Library:CreateWindow(opts)
 		})
 		round(activeBar, 10)
 
-		local iconLabel = create("TextLabel", {
+		create("TextLabel", {
 			Parent = tabBtn,
 			BackgroundTransparency = 1,
 			Position = UDim2.new(0, 18, 0, 0),
@@ -850,7 +851,7 @@ function Library:CreateWindow(opts)
 			TextXAlignment = Enum.TextXAlignment.Left,
 		})
 
-		local titleLabel = create("TextLabel", {
+		create("TextLabel", {
 			Parent = tabBtn,
 			BackgroundTransparency = 1,
 			Position = UDim2.new(0, 42, 0, 0),
@@ -875,7 +876,7 @@ function Library:CreateWindow(opts)
 			Visible = false,
 		})
 		padding(page, 2, 4, 2, 2)
-		list(page, Enum.FillDirection.Vertical, 10)
+		list(page, 10)
 
 		local tab = {}
 		tab.Title = tabTitle
@@ -895,10 +896,10 @@ function Library:CreateWindow(opts)
 				AutomaticSize = Enum.AutomaticSize.Y,
 			})
 			round(section, 14)
-			stroke(section, selfWindow.Theme.Stroke, 1, 0.94)
+			stroke(section, Color3.fromRGB(255, 255, 255), 1, 0.94)
 			padding(section, 12, 12, 12, 12)
 
-			local sTitle = create("TextLabel", {
+			create("TextLabel", {
 				Parent = section,
 				BackgroundTransparency = 1,
 				Size = UDim2.new(1, 0, 0, 18),
@@ -917,7 +918,7 @@ function Library:CreateWindow(opts)
 				Size = UDim2.new(1, 0, 0, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
 			})
-			list(content, Enum.FillDirection.Vertical, 8)
+			list(content, 8)
 
 			local sectionObj = { _container = content, _tab = tab }
 
@@ -930,11 +931,11 @@ function Library:CreateWindow(opts)
 					Size = UDim2.new(1, 0, 0, height or 42),
 				})
 				round(frame, 12)
-				stroke(frame, selfWindow.Theme.Stroke, 1, 0.95)
+				stroke(frame, Color3.fromRGB(255, 255, 255), 1, 0.95)
 				return frame
 			end
 
-			local function applyIconText(text, icon)
+			local function iconText(text, icon)
 				if icon and tostring(icon) ~= "" then
 					return tostring(icon) .. "  " .. tostring(text)
 				end
@@ -945,13 +946,13 @@ function Library:CreateWindow(opts)
 				data = data or {}
 				local frame = elementBase(42)
 
-				local label = create("TextLabel", {
+				create("TextLabel", {
 					Parent = frame,
 					BackgroundTransparency = 1,
 					Position = UDim2.new(0, 12, 0, 0),
 					Size = UDim2.new(1, -60, 1, 0),
 					Font = Enum.Font.GothamSemibold,
-					Text = applyIconText(data.Title or "Toggle", data.Icon),
+					Text = iconText(data.Title or "Toggle", data.Icon),
 					TextColor3 = selfWindow.Theme.Text,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
@@ -968,7 +969,7 @@ function Library:CreateWindow(opts)
 					AutoButtonColor = false,
 				})
 				round(box, 7)
-				stroke(box, selfWindow.Theme.Stroke, 1, 0.94)
+				stroke(box, Color3.fromRGB(255, 255, 255), 1, 0.94)
 
 				local check = create("Frame", {
 					Parent = box,
@@ -989,7 +990,7 @@ function Library:CreateWindow(opts)
 					end
 				end
 
-				box.MouseButton1Click:Connect(function()
+				box.Activated:Connect(function()
 					set(not value)
 				end)
 
@@ -1016,13 +1017,13 @@ function Library:CreateWindow(opts)
 					Position = UDim2.new(0, 12, 0, 0),
 					Size = UDim2.new(1, -24, 1, 0),
 					Font = Enum.Font.GothamSemibold,
-					Text = applyIconText(data.Title or "Button", data.Icon),
+					Text = iconText(data.Title or "Button", data.Icon),
 					TextColor3 = selfWindow.Theme.Text,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
 				})
 
-				btn.MouseButton1Click:Connect(function()
+				btn.Activated:Connect(function()
 					if data.Callback then
 						data.Callback()
 					end
@@ -1041,7 +1042,7 @@ function Library:CreateWindow(opts)
 					Position = UDim2.new(0, 12, 0, 2),
 					Size = UDim2.new(1, -24, 0, 16),
 					Font = Enum.Font.GothamSemibold,
-					Text = applyIconText(data.Title or "Input", data.Icon),
+					Text = iconText(data.Title or "Input", data.Icon),
 					TextColor3 = selfWindow.Theme.Text,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
@@ -1064,7 +1065,7 @@ function Library:CreateWindow(opts)
 					TextXAlignment = Enum.TextXAlignment.Left,
 				})
 				round(box, 8)
-				stroke(box, selfWindow.Theme.Stroke, 1, 0.94)
+				stroke(box, Color3.fromRGB(255, 255, 255), 1, 0.94)
 				padding(box, 0, 0, 10, 10)
 
 				box.FocusLost:Connect(function(enter)
@@ -1102,7 +1103,7 @@ function Library:CreateWindow(opts)
 					Position = UDim2.new(0, 12, 0, 2),
 					Size = UDim2.new(1, -24, 0, 16),
 					Font = Enum.Font.GothamSemibold,
-					Text = applyIconText(data.Title or "Slider", data.Icon),
+					Text = iconText(data.Title or "Slider", data.Icon),
 					TextColor3 = selfWindow.Theme.Text,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
@@ -1129,7 +1130,7 @@ function Library:CreateWindow(opts)
 					Size = UDim2.new(1, -24, 0, 14),
 				})
 				round(bar, 8)
-				stroke(bar, selfWindow.Theme.Stroke, 1, 0.95)
+				stroke(bar, Color3.fromRGB(255, 255, 255), 1, 0.95)
 
 				local fill = create("Frame", {
 					Parent = bar,
@@ -1217,13 +1218,13 @@ function Library:CreateWindow(opts)
 					Position = UDim2.new(0, 12, 0, 0),
 					Size = UDim2.new(1, -42, 1, 0),
 					Font = Enum.Font.GothamSemibold,
-					Text = applyIconText(data.Title or "Dropdown", data.Icon),
+					Text = iconText(data.Title or "Dropdown", data.Icon),
 					TextColor3 = selfWindow.Theme.Text,
 					TextSize = 13,
 					TextXAlignment = Enum.TextXAlignment.Left,
 				})
 
-				local arrow = create("TextLabel", {
+				create("TextLabel", {
 					Parent = button,
 					BackgroundTransparency = 1,
 					Position = UDim2.new(1, -26, 0, 0),
@@ -1236,6 +1237,7 @@ function Library:CreateWindow(opts)
 
 				local dropdownObj = {
 					Title = data.Title or "Dropdown",
+					Icon = data.Icon,
 					Button = button,
 					Callback = data.Callback,
 					_selected = nil,
@@ -1250,13 +1252,13 @@ function Library:CreateWindow(opts)
 								table.insert(selected, tostring(v))
 							end
 						end
-						titleLabel.Text = (applyIconText(data.Title or "Dropdown", data.Icon)) .. " : " .. (#selected > 0 and table.concat(selected, ", ") or "None")
+						titleLabel.Text = iconText(data.Title or "Dropdown", data.Icon) .. " : " .. (#selected > 0 and table.concat(selected, ", ") or "None")
 					else
-						titleLabel.Text = (applyIconText(data.Title or "Dropdown", data.Icon)) .. " : " .. tostring(dropdownObj._selected or defaultValue or "Select")
+						titleLabel.Text = iconText(data.Title or "Dropdown", data.Icon) .. " : " .. tostring(dropdownObj._selected or defaultValue or "Select")
 					end
 				end
 
-				button.MouseButton1Click:Connect(function()
+				local function openDropdown(valuesArg, multiArg, defaultArg, noSearchArg)
 					local overlay = create("Frame", {
 						Parent = gui,
 						Name = "DropdownOverlay",
@@ -1281,7 +1283,13 @@ function Library:CreateWindow(opts)
 						ZIndex = 51,
 					})
 					round(popup, 16)
-					stroke(popup, selfWindow.Theme.Stroke, 1, 0.9)
+					stroke(popup, Color3.fromRGB(255, 255, 255), 1, 0.86)
+
+					local function closePopup()
+						if overlay and overlay.Parent then
+							overlay:Destroy()
+						end
+					end
 
 					create("TextLabel", {
 						Parent = popup,
@@ -1289,7 +1297,7 @@ function Library:CreateWindow(opts)
 						Position = UDim2.new(0, 14, 0, 10),
 						Size = UDim2.new(1, -28, 0, 20),
 						Font = Enum.Font.GothamBold,
-						Text = applyIconText(data.Title or "Dropdown", data.Icon),
+						Text = (data.Icon and tostring(data.Icon) .. "  " or "") .. (data.Title or "Dropdown"),
 						TextColor3 = selfWindow.Theme.Text,
 						TextSize = 16,
 						TextXAlignment = Enum.TextXAlignment.Left,
@@ -1302,7 +1310,7 @@ function Library:CreateWindow(opts)
 						BackgroundTransparency = 0.12,
 						BorderSizePixel = 0,
 						Text = "✕",
-						TextColor3 = Color3.fromRGB(255, 240, 240),
+						TextColor3 = Color3.fromRGB(255, 245, 245),
 						Font = Enum.Font.GothamBold,
 						TextSize = 14,
 						Size = UDim2.fromOffset(28, 28),
@@ -1311,22 +1319,24 @@ function Library:CreateWindow(opts)
 						ZIndex = 52,
 					})
 					round(close, 10)
+					stroke(close, Color3.fromRGB(255, 255, 255), 1, 0.75)
+					close.Activated:Connect(closePopup)
 
 					local search
 					local listTop = 50
 
-					if not data.NoSearch then
+					if not noSearchArg then
 						local searchFrame = create("Frame", {
 							Parent = popup,
-							BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-							BackgroundTransparency = 0.9,
+							BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+							BackgroundTransparency = 0.16,
 							BorderSizePixel = 0,
 							Position = UDim2.new(0, 14, 0, 38),
 							Size = UDim2.new(1, -28, 0, 30),
 							ZIndex = 52,
 						})
 						round(searchFrame, 10)
-						stroke(searchFrame, selfWindow.Theme.Stroke, 1, 0.94)
+						stroke(searchFrame, Color3.fromRGB(255, 255, 255), 1, 0.92)
 
 						create("TextLabel", {
 							Parent = searchFrame,
@@ -1373,46 +1383,46 @@ function Library:CreateWindow(opts)
 						ZIndex = 52,
 					})
 					padding(scroll, 2, 2, 2, 2)
-					list(scroll, Enum.FillDirection.Vertical, 8)
+					list(scroll, 8)
 
+					local optionButtons = {}
 					local selection = {}
-					if data.Multi then
-						if typeof(defaultValue) == "table" then
-							for _, v in ipairs(defaultValue) do
+
+					if multiArg then
+						if typeof(defaultArg) == "table" then
+							for _, v in ipairs(defaultArg) do
 								selection[tostring(v)] = true
 							end
-						elseif defaultValue ~= nil then
-							selection[tostring(defaultValue)] = true
+						elseif defaultArg ~= nil then
+							selection[tostring(defaultArg)] = true
 						end
 					end
 
 					local function getCurrent()
-						if data.Multi then
+						if multiArg then
 							local result = {}
-							for _, v in ipairs(values) do
+							for _, v in ipairs(valuesArg) do
 								if selection[tostring(v)] then
 									table.insert(result, v)
 								end
 							end
 							return result
 						end
-						return dropdownObj._selected or defaultValue
+						return dropdownObj._selected or defaultArg
 					end
 
 					local function syncButton()
-						if data.Multi then
+						if multiArg then
 							local arr = getCurrent()
 							if #arr == 0 then
-								titleLabel.Text = applyIconText(data.Title or "Dropdown", data.Icon) .. " : None"
+								titleLabel.Text = iconText(data.Title or "Dropdown", data.Icon) .. " : None"
 							else
-								titleLabel.Text = applyIconText(data.Title or "Dropdown", data.Icon) .. " : " .. table.concat(arr, ", ")
+								titleLabel.Text = iconText(data.Title or "Dropdown", data.Icon) .. " : " .. table.concat(arr, ", ")
 							end
 						else
-							titleLabel.Text = applyIconText(data.Title or "Dropdown", data.Icon) .. " : " .. tostring(dropdownObj._selected or defaultValue or "Select")
+							titleLabel.Text = iconText(data.Title or "Dropdown", data.Icon) .. " : " .. tostring(dropdownObj._selected or defaultArg or "Select")
 						end
 					end
-
-					local optionButtons = {}
 
 					local function refreshVisible(filterText)
 						local lower = string.lower(filterText or "")
@@ -1421,13 +1431,13 @@ function Library:CreateWindow(opts)
 						end
 					end
 
-					for _, value in ipairs(values) do
+					for _, value in ipairs(valuesArg) do
 						local vText = tostring(value)
 
 						local itemBtn = create("TextButton", {
 							Parent = scroll,
 							BackgroundColor3 = selfWindow.Theme.Element2,
-							BackgroundTransparency = 0.1,
+							BackgroundTransparency = 0.08,
 							BorderSizePixel = 0,
 							Size = UDim2.new(1, 0, 0, 34),
 							Font = Enum.Font.Gotham,
@@ -1436,7 +1446,7 @@ function Library:CreateWindow(opts)
 							ZIndex = 53,
 						})
 						round(itemBtn, 10)
-						stroke(itemBtn, selfWindow.Theme.Stroke, 1, 0.95)
+						stroke(itemBtn, Color3.fromRGB(255, 255, 255), 1, 0.94)
 
 						local itemText = create("TextLabel", {
 							Parent = itemBtn,
@@ -1444,21 +1454,27 @@ function Library:CreateWindow(opts)
 							Position = UDim2.new(0, 10, 0, 0),
 							Size = UDim2.new(1, -20, 1, 0),
 							Font = Enum.Font.Gotham,
-							Text = data.Multi and ((selection[vText] and "✓  " or "○  ") .. vText) or vText,
+							Text = multiArg and ((selection[vText] and "✓  " or "○  ") .. vText) or vText,
 							TextColor3 = selfWindow.Theme.Text,
 							TextSize = 13,
 							TextXAlignment = Enum.TextXAlignment.Left,
 							ZIndex = 54,
 						})
 
-						itemBtn.MouseButton1Click:Connect(function()
-							if data.Multi then
+						itemBtn.Activated:Connect(function()
+							if multiArg then
 								selection[vText] = not selection[vText]
 								itemText.Text = (selection[vText] and "✓  " or "○  ") .. vText
 								dropdownObj._selected = selection
 								syncButton()
 								if dropdownObj.Callback then
-									dropdownObj.Callback(getCurrent())
+									local result = {}
+									for _, vv in ipairs(valuesArg) do
+										if selection[tostring(vv)] then
+											table.insert(result, vv)
+										end
+									end
+									dropdownObj.Callback(result)
 								end
 							else
 								dropdownObj._selected = value
@@ -1466,7 +1482,7 @@ function Library:CreateWindow(opts)
 								if dropdownObj.Callback then
 									dropdownObj.Callback(value)
 								end
-								overlay:Destroy()
+								closePopup()
 							end
 						end)
 
@@ -1481,20 +1497,20 @@ function Library:CreateWindow(opts)
 						end)
 					end
 
-					close.MouseButton1Click:Connect(function()
-						overlay:Destroy()
-					end)
-
 					overlay.InputBegan:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseButton1 then
 							local mouse = UserInputService:GetMouseLocation()
 							local p = popup.AbsolutePosition
 							local s = popup.AbsoluteSize
 							if mouse.X < p.X or mouse.X > p.X + s.X or mouse.Y < p.Y or mouse.Y > p.Y + s.Y then
-								overlay:Destroy()
+								closePopup()
 							end
 						end
 					end)
+				end
+
+				button.Activated:Connect(function()
+					openDropdown(values, data.Multi == true, defaultValue, data.NoSearch == true)
 				end)
 
 				if defaultValue ~= nil then
@@ -1519,11 +1535,12 @@ function Library:CreateWindow(opts)
 			return sectionObj
 		end
 
-		tabBtn.MouseButton1Click:Connect(function()
+		tabBtn.Activated:Connect(function()
 			selectTab(tab)
 		end)
 
 		table.insert(selfWindow._tabs, tab)
+
 		if not selfWindow._currentTab then
 			selectTab(tab)
 		end
@@ -1551,10 +1568,9 @@ function Library:CreateWindow(opts)
 			ZIndex = 40,
 		})
 		round(btn, 12)
-		stroke(btn, selfWindow.Theme.Accent, 1, 0.65)
+		stroke(btn, Color3.fromRGB(255, 255, 255), 1, 0.78)
 
-		local iconText = btnOpts.Icon or btnOpts.Image or "◉"
-		local txt = create("TextLabel", {
+		create("TextLabel", {
 			Parent = btn,
 			BackgroundTransparency = 1,
 			Size = UDim2.new(1, -30, 1, 0),
@@ -1572,24 +1588,23 @@ function Library:CreateWindow(opts)
 			Size = UDim2.fromOffset(22, 22),
 			Position = UDim2.new(1, -28, 0.5, -11),
 			Font = Enum.Font.GothamBold,
-			Text = tostring(iconText),
+			Text = tostring(btnOpts.Icon or btnOpts.Image or "◉"),
 			TextColor3 = selfWindow.Theme.Accent,
 			TextSize = 14,
 		})
 
 		makeDraggable(btn, btn)
 
-		btn.MouseButton1Click:Connect(function()
+		btn.Activated:Connect(function()
 			if not selfWindow.Main or not selfWindow.Main.Parent then
 				return
 			end
 
+			selfWindow.Main.Visible = not selfWindow.Main.Visible
 			if selfWindow.Main.Visible then
-				selfWindow.Main.Visible = false
-				removeBlur()
+				enableBlur()
 			else
-				selfWindow.Main.Visible = true
-				ensureBlur()
+				disableBlur()
 			end
 		end)
 
@@ -1602,13 +1617,13 @@ function Library:CreateWindow(opts)
 			return
 		end
 		selfWindow._destroyed = true
-		removeBlur()
+		disableBlur()
 		if selfWindow.Gui then
 			selfWindow.Gui:Destroy()
 		end
 	end
 
-	closeBtn.MouseButton1Click:Connect(function()
+	closeBtn.Activated:Connect(function()
 		selfWindow:Destroy()
 	end)
 
@@ -1622,9 +1637,9 @@ function Library:CreateWindow(opts)
 			if selfWindow.Main and selfWindow.Main.Parent then
 				selfWindow.Main.Visible = not selfWindow.Main.Visible
 				if selfWindow.Main.Visible then
-					ensureBlur()
+					enableBlur()
 				else
-					removeBlur()
+					disableBlur()
 				end
 			end
 		end
