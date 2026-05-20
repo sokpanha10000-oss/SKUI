@@ -1,27 +1,5 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- [FULL LIBRARY CODE WITH UPGRADES]
+-- Changes marked with -- UPGRADED
 
 local a=cloneref or(function(...)return...end)
 
@@ -125,7 +103,7 @@ end
 
 local s={
 Information={
-Version="v2.0.1",
+Version="v2.0.2", -- UPGRADED version bump
 GitHubOwner="tlredz"
 },
 Default={
@@ -868,6 +846,7 @@ ao.Set=ao.SetValue
 end local al=function(
 
 al, am, an)
+-- UPGRADED: resolve icon from name for tab buttons
 local ao=E("TextButton","Button",an,{
 Size=UDim2.new(1,0,0,24),
 AutoButtonColor=false,
@@ -934,13 +913,14 @@ Padding=UDim.new(0,5)
 }
 })
 
+-- UPGRADED: resolve icon name through GetIconByName so string names like "home" work
 local ar=E("ImageLabel",ao,{
 Position=UDim2.new(0,8,0.5),
 Size=UDim2.new(0,13,0,13),
 AnchorPoint=Vector2.new(0,0.5),
 BackgroundTransparency=1,
 ImageTransparency=0.3,
-Image=am.Icon or""
+Image=s:GetIconByName(am.Icon) or am.Icon or ""
 })local as=function()
 
 
@@ -1075,8 +1055,11 @@ if type(ao)~="table"then
 error(`"Tab.Add{an}[Configs]". 'table' expected, got {typeof(ao)}`,2)
 end
 
+-- UPGRADED: support Name/Title/[1], Icon/Image/[2] keys confidently
 local ap=ao[1]or ao.Name or ao.Title
 local aq=ao.Desc or ao.Description
+-- UPGRADED: pull icon from multiple aliases
+local ar=ao.Icon or ao.Image or ao.Ico
 
 assert(type(ap)=="string",`"Tab.Add{an}.Title". 'string' expected, got {typeof(ap)}`)
 
@@ -1084,7 +1067,11 @@ if aq~=nil and type(aq)~="string"then
 error(`"Tab.Add{an}.Description". 'string', or 'nil' expected, got {typeof(aq)}`,2)
 end
 
-return ap,aq or""end local ao=function(
+if ar~=nil and type(ar)~="string"then
+error(`"Tab.Add{an}.Icon". 'string', or 'nil' expected, got {typeof(ar)}`,2)
+end
+
+return ap,aq or"",ar end local ao=function(
 
 
 ao, ap)
@@ -1637,7 +1624,8 @@ Parent=self
 end
 
 function ah:AddToggle(av)
-local aw,ax=an("Toggle",av)
+-- UPGRADED: now reads Icon/Image/Ico alias from config
+local aw,ax,aIcon=an("Toggle",av)
 local ay=ao("Toggle",av[4]or av.Flag)
 
 local az=av[2]or av.Default or false
@@ -1653,6 +1641,27 @@ end
 
 local aB=V[self]
 local aC,aD,aE=am(self,aw,ax,UDim2.new(1,-38,0,0))
+
+-- UPGRADED: apply resolved icon to the option row's left icon slot
+if aIcon~=nil and aIcon~="" then
+local aIconResolved=s:GetIconByName(aIcon) or aIcon
+local aIconLabel=E("ImageLabel",aC,{
+Size=UDim2.new(0,14,0,14),
+Position=UDim2.new(0,8,0.5),
+AnchorPoint=Vector2.new(0,0.5),
+BackgroundTransparency=1,
+Image=aIconResolved,
+ThemeTag={
+OBJECTS=aB,
+ImageColor3="Colors.Icons"
+}
+})
+-- shift title label to make room
+local aHolder=aC:FindFirstChild"Holder"
+if aHolder then
+aHolder.Position=UDim2.fromOffset(28,0)
+end
+end
 
 local aF=E("Frame",aC,{
 Size=UDim2.new(0,35,0,18),
@@ -1754,12 +1763,19 @@ return aP
 end
 
 function ah:AddButton(av)
-local aw,ax=an("Button",av)
+-- UPGRADED: now reads Icon/Image/Ico alias from config
+local aw,ax,aIcon=an("Button",av)
 local ay=F(av[2]or av.Callback)
 local az=av.Debounce or av.Cooldown
 
 local aA=V[self]
 local aB,aC,aD=am(self,aw,ax,UDim2.new(1,-20,0,0))
+
+-- UPGRADED: if a custom Icon is given, show that icon instead of the default arrow icon
+local aIconResolved=nil
+if aIcon~=nil and aIcon~="" then
+aIconResolved=s:GetIconByName(aIcon) or aIcon
+end
 
 local aE=E("ImageLabel",aB,{
 Size=UDim2.new(0,14,0,14),
@@ -1768,9 +1784,16 @@ AnchorPoint=Vector2.new(1,0.5),
 BackgroundTransparency=1,
 ThemeTag={
 OBJECTS=aA,
-Image="Icons.Button"
+-- UPGRADED: use custom icon if provided, otherwise fall back to default arrow
+Image=aIconResolved and aIconResolved or "Icons.Button",
+ImageColor3="Colors.Icons"
 }
 })
+
+-- UPGRADED: if a resolved icon asset was given, apply it directly (bypasses theme path)
+if aIconResolved then
+aE.Image=aIconResolved
+end
 
 local aF=0
 
@@ -3674,7 +3697,10 @@ Scale=P(1)
 local ae={
 Title=ab[1]or ab.Name or ab.Title,
 SubTitle=ab[2]or ab.SubName or ab.SubTitle,
-ScriptFolder=ab[3]or ab.ScriptFolder or ab.FolderName
+ScriptFolder=ab[3]or ab.ScriptFolder or ab.FolderName,
+-- UPGRADED: read Image and BackgroundImage from config
+Image=ab.Image or ab.Logo or ab.Icon,
+BackgroundImage=ab.BackgroundImage or ab.BgImage
 }
 
 assert(type(ae.Title)=="string",`"Window.Title". 'string' expected, got {typeof(ae.Title)}`)
@@ -3686,6 +3712,15 @@ end
 
 if ae.ScriptFolder~=nil and string.find(ae.ScriptFolder,"/")then
 return error("\"Window.ScriptFolder\" is not valid, unexpected char \"/\"",2)
+end
+
+-- UPGRADED: validate Image types
+if ae.Image~=nil and type(ae.Image)~="string"then
+return error(`"Window.Image". 'string', or nil expected, got {typeof(ae.Image)}`,2)
+end
+
+if ae.BackgroundImage~=nil and type(ae.BackgroundImage)~="string"then
+return error(`"Window.BackgroundImage". 'string', or nil expected, got {typeof(ae.BackgroundImage)}`,2)
 end
 
 local af=(function()
@@ -3844,6 +3879,20 @@ Color="Colors.Background"
 }
 })
 
+-- UPGRADED: apply BackgroundImage to window frame if provided
+if ae.BackgroundImage~=nil and ae.BackgroundImage~=""and ae.BackgroundImage~="rbxassetid://0"then
+local aBgImg=E("ImageLabel",ak,{
+Size=UDim2.fromScale(1,1),
+BackgroundTransparency=1,
+Image=ae.BackgroundImage,
+ScaleType=Enum.ScaleType.Crop,
+ZIndex=0,
+Elements={
+Corner=UDim.new(0,8)
+}
+})
+end
+
 u(ak.Destroying,function()
 self:Destroy()
 end)
@@ -3863,10 +3912,24 @@ Size=UDim2.new(1,0,0,28),
 BackgroundTransparency=1
 })
 
+-- UPGRADED: apply window icon next to title if Image provided
+local ao_titleIcon=nil
+if ae.Image~=nil and ae.Image~=""and ae.Image~="rbxassetid://0"then
+ao_titleIcon=E("ImageLabel","TitleIcon",an,{
+Size=UDim2.new(0,18,0,18),
+Position=UDim2.new(0,15,0.5,0),
+AnchorPoint=Vector2.new(0,0.5),
+BackgroundTransparency=1,
+Image=ae.Image
+})
+end
+
+local titleOffset=ao_titleIcon and 38 or 15
+
 local ao=E("TextLabel","Title",an,{
 TextXAlignment=Enum.TextXAlignment.Left,
 AutomaticSize=Enum.AutomaticSize.XY,
-Position=UDim2.new(0,15,0.5,0),
+Position=UDim2.new(0,titleOffset,0.5,0),
 AnchorPoint=Vector2.new(0,0.5),
 Text=ae.Title,
 TextSize=12,
@@ -4062,3 +4125,53 @@ return as
 end
 
 return s
+
+--[[ ================================================================
+     USAGE EXAMPLE  (paste this AFTER the library loads)
+     ================================================================
+
+local Library = loadstring(...)() -- or however you load it
+
+-- UPGRADED: MakeWindow now supports Image (topbar icon) and
+-- BackgroundImage (window background). Both accept rbxassetid strings.
+-- Pass "rbxassetid://0" or omit to skip each feature.
+local Window = Library:MakeWindow({
+    Title        = "Nice Hub : Cool Game",
+    SubTitle     = "dev by real_redz",
+    ScriptFolder = "redz-library-V5",
+    Image        = "rbxassetid://0",   -- topbar icon (0 = none)
+    BackgroundImage = "rbxassetid://0" -- bg wallpaper (0 = none)
+})
+
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "home"  -- name string resolved via GetIconByName
+})
+
+-- UPGRADED: AddToggle now supports Icon / Image / Ico aliases.
+-- The icon appears to the left of the toggle label.
+Tab:AddToggle({
+    Name    = "Toggle",
+    Icon    = "home",   -- same icon name system as tabs
+    Default = false,
+    Callback = function(Value)
+        print("Toggle:", Value)
+    end
+})
+
+-- UPGRADED: AddButton now supports Icon / Image / Ico aliases.
+-- Replaces the default arrow icon on the right side.
+Tab:AddButton({
+    Name     = "My Button",
+    Icon     = "home",  -- same icon name system
+    Debounce = 0.5,
+    Callback = function()
+        print("Button clicked!")
+    end
+})
+
+-- Icon name rules (same as before, just more confidently read):
+--   "home"           -> looked up in self.Icons table
+--   "rbxassetid://X" -> used directly as asset id
+--   nil / ""         -> no icon shown
+--]] ================================================================
