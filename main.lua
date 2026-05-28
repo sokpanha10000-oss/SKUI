@@ -1,69 +1,81 @@
--- [[ SKBUILDER AI: FIXED GLASSMORPHIC UI LIBRARY ]]
+-- [[ SKBUILDER AI: UPGRADED & FIXED GLASSMORPHIC UI LIBRARY ]]
+-- Features: Ultra-smooth physics dragging, clean glass aesthetics, and direct error-free syntax translation.
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 
 local SKUI = {}
 SKUI.__index = SKUI
 
--- Global fallback to prevent crashes from your usage sample
+-- Global tracking variable to maintain backwards compatibility with direct unassigned Dropdown refreshes
 _G.LastCreatedDropdown = nil
 
--- Smooth Draggable Helper
-local function makeDraggable(frame, handle)
+-- ==========================================
+-- PHYSICS-INTERPOLATED DRAGGING SYSTEM (UPGRADED)
+-- ==========================================
+local function makeElementDraggable(frame, handle)
 	local dragging = false
 	local dragInput, dragStart, startPos
+	
+	-- Connection variables to prevent memory leaks
+	local inputBeganConn, inputChangedConn, globalInputChangedConn
 
-	local function update(input)
-		if not startPos then return end
-		local delta = input.Position - dragStart
-		TweenService:Create(frame, TweenInfo.new(0.15, Enum.EasingStyle.OutQuad), {
-			Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		}):Play()
-	end
-
-	handle.InputBegan:Connect(function(input)
+	inputBeganConn = handle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
 			startPos = frame.Position
 
-			input.Changed:Connect(function()
+			local stateConnection
+			stateConnection = input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
+					if stateConnection then
+						stateConnection:Disconnect()
+					end
 				end
 			end)
 		end
 	end)
 
-	handle.InputChanged:Connect(function(input)
+	inputChangedConn = handle.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
 	end)
 
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			update(input)
+	globalInputChangedConn = UserInputService.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - dragStart
+			-- Smooth quad lerp for premium, drift-free movement dragging
+			TweenService:Create(frame, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(
+					startPos.X.Scale, startPos.X.Offset + delta.X,
+					startPos.Y.Scale, startPos.Y.Offset + delta.Y
+				)
+			}):Play()
 		end
 	end)
 end
 
--- Create Window
+-- ==========================================
+-- MAIN WINDOW CREATION
+-- ==========================================
 function SKUI:CreateWindow(config)
 	config = config or {}
 	local titleText = config.Title or "My Super Hub"
 	local authorText = config.Author or "by Unknown"
 	local imageId = config.Image or ""
 
-	-- Generate Container
+	-- Standard ScreenGui Setup with CoreGui Fallback
 	local ScreenGui = Instance.new("ScreenGui")
-	ScreenGui.Name = "SKUI_Container"
+	ScreenGui.Name = "SKUI_GlassContainer"
 	ScreenGui.ResetOnSpawn = false
 	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	
-	-- Safe CoreGui execution check
 	local success, err = pcall(function()
 		ScreenGui.Parent = CoreGui
 	end)
@@ -71,28 +83,30 @@ function SKUI:CreateWindow(config)
 		ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 	end
 
-	-- Main Window Frame (Glass-Air Theme)
+	-- Transparent Glass Window Frame ("White Air" Theme)
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Name = "MainFrame"
 	MainFrame.Size = UDim2.new(0, 580, 0, 380)
 	MainFrame.Position = UDim2.new(0.5, -290, 0.5, -190)
 	MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	MainFrame.BackgroundTransparency = 0.92 -- Frosted Glass "White Air"
+	MainFrame.BackgroundTransparency = 0.92 -- Sleek see-through look
 	MainFrame.BorderSizePixel = 0
 	MainFrame.Parent = ScreenGui
 
+	-- Round Corners
 	local WindowCorner = Instance.new("UICorner")
 	WindowCorner.CornerRadius = UDim.new(0, 12)
 	WindowCorner.Parent = MainFrame
 
+	-- Window Outline Glow (Pure White frosted glass edge)
 	local WindowStroke = Instance.new("UIStroke")
 	WindowStroke.Color = Color3.fromRGB(255, 255, 255)
 	WindowStroke.Thickness = 1.2
-	WindowStroke.Transparency = 0.5
+	WindowStroke.Transparency = 0.55
 	WindowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	WindowStroke.Parent = MainFrame
 
-	-- Top Header Bar (Drag Handle)
+	-- Top Header (Interactive Drag Handle)
 	local Header = Instance.new("Frame")
 	Header.Name = "Header"
 	Header.Size = UDim2.new(1, 0, 0, 45)
@@ -107,7 +121,7 @@ function SKUI:CreateWindow(config)
 	if imageId ~= "" and imageId ~= "ID" then
 		TitleIcon.Image = imageId:find("rbxassetid://") and imageId or "rbxassetid://" .. imageId
 	else
-		TitleIcon.Image = "rbxassetid://10747372701" -- Default fallback
+		TitleIcon.Image = "rbxassetid://10747372701" -- Elegant fallback globe icon
 	end
 	TitleIcon.Parent = Header
 
@@ -135,7 +149,7 @@ function SKUI:CreateWindow(config)
 	AuthorLabel.TextXAlignment = Enum.TextXAlignment.Right
 	AuthorLabel.Parent = Header
 
-	-- Close Button (Deletes UI)
+	-- Close Button (Permanently Deletes UI)
 	local CloseBtn = Instance.new("ImageButton")
 	CloseBtn.Name = "CloseBtn"
 	CloseBtn.Size = UDim2.new(0, 22, 0, 22)
@@ -149,7 +163,7 @@ function SKUI:CreateWindow(config)
 		ScreenGui:Destroy()
 	end)
 
-	-- Content Container
+	-- Body Contents
 	local ContentContainer = Instance.new("Frame")
 	ContentContainer.Name = "ContentContainer"
 	ContentContainer.Size = UDim2.new(1, -20, 1, -65)
@@ -157,7 +171,7 @@ function SKUI:CreateWindow(config)
 	ContentContainer.BackgroundTransparency = 1
 	ContentContainer.Parent = MainFrame
 
-	-- Left Sidebar Box
+	-- Left Sidebar Frame Box
 	local Sidebar = Instance.new("Frame")
 	Sidebar.Name = "Sidebar"
 	Sidebar.Size = UDim2.new(0, 170, 1, 0)
@@ -176,7 +190,7 @@ function SKUI:CreateWindow(config)
 	SidebarStroke.Transparency = 0.7
 	SidebarStroke.Parent = Sidebar
 
-	-- Search Bar
+	-- Left Search Bar
 	local SearchFrame = Instance.new("Frame")
 	SearchFrame.Name = "SearchFrame"
 	SearchFrame.Size = UDim2.new(1, -16, 0, 32)
@@ -192,7 +206,7 @@ function SKUI:CreateWindow(config)
 	local SearchStroke = Instance.new("UIStroke")
 	SearchStroke.Color = Color3.fromRGB(255, 255, 255)
 	SearchStroke.Thickness = 1
-	SearchStroke.Transparency = 0.7
+	SearchStroke.Transparency = 0.75
 	SearchStroke.Parent = SearchFrame
 
 	local SearchIcon = Instance.new("ImageLabel")
@@ -210,7 +224,7 @@ function SKUI:CreateWindow(config)
 	SearchBox.Position = UDim2.new(0, 30, 0, 0)
 	SearchBox.BackgroundTransparency = 1
 	SearchBox.Text = ""
-	SearchBox.PlaceholderText = "Search..."
+	SearchBox.PlaceholderText = "Search features..."
 	SearchBox.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
 	SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 	SearchBox.Font = Enum.Font.Gotham
@@ -218,7 +232,7 @@ function SKUI:CreateWindow(config)
 	SearchBox.TextXAlignment = Enum.TextXAlignment.Left
 	SearchBox.Parent = SearchFrame
 
-	-- Tab List Scroll
+	-- Scrolling Tab List
 	local TabListScroll = Instance.new("ScrollingFrame")
 	TabListScroll.Name = "TabListScroll"
 	TabListScroll.Size = UDim2.new(1, -10, 1, -54)
@@ -235,7 +249,7 @@ function SKUI:CreateWindow(config)
 	TabListLayout.Padding = UDim.new(0, 5)
 	TabListLayout.Parent = TabListScroll
 
-	-- Right Side Container
+	-- Right Open Display Canvas (Elements directly placed here without background box)
 	local DisplayContainer = Instance.new("Frame")
 	DisplayContainer.Name = "DisplayContainer"
 	DisplayContainer.Size = UDim2.new(1, -185, 1, 0)
@@ -243,7 +257,7 @@ function SKUI:CreateWindow(config)
 	DisplayContainer.BackgroundTransparency = 1
 	DisplayContainer.Parent = ContentContainer
 
-	-- Dropdown Overlay (Middle Front Square Popout)
+	-- Global Dropdown Overlay Screen (Medium Center Popout Selector)
 	local DropdownOverlay = Instance.new("Frame")
 	DropdownOverlay.Name = "DropdownOverlay"
 	DropdownOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -322,7 +336,8 @@ function SKUI:CreateWindow(config)
 		end)
 	end)
 
-	makeDraggable(MainFrame, Header)
+	-- Apply Dragging to Main Window
+	makeElementDraggable(MainFrame, Header)
 
 	local windowObject = {
 		ScreenGui = ScreenGui,
@@ -333,7 +348,9 @@ function SKUI:CreateWindow(config)
 		SearchQuery = ""
 	}
 
-	-- Create Floating Minimize Button (Can drag anywhere, toggles UI)
+	-- ==========================================
+	-- FLOATING MINIMIZE BUTTON CREATION
+	-- ==========================================
 	function windowObject:CreateMinimizeBtn(minConfig)
 		minConfig = minConfig or {}
 		local minTitle = minConfig.Title or "Open UI"
@@ -342,7 +359,7 @@ function SKUI:CreateWindow(config)
 		local FloatingBtn = Instance.new("Frame")
 		FloatingBtn.Name = "FloatingMinimize"
 		FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
-		FloatingBtn.Position = UDim2.new(0.05, 0, 0.15, 0)
+		FloatingBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
 		FloatingBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		FloatingBtn.BackgroundTransparency = 0.88
 		FloatingBtn.Active = true
@@ -365,7 +382,7 @@ function SKUI:CreateWindow(config)
 		if minImage ~= "" and minImage ~= "ID" then
 			FloatIcon.Image = minImage:find("rbxassetid://") and minImage or "rbxassetid://" .. minImage
 		else
-			FloatIcon.Image = "rbxassetid://10723415122"
+			FloatIcon.Image = "rbxassetid://10723415122" -- System toggle design template
 		end
 		FloatIcon.Parent = FloatingBtn
 
@@ -393,6 +410,7 @@ function SKUI:CreateWindow(config)
 			FloatLabel.Visible = false
 		end)
 
+		-- Invisible Trigger Button
 		local ClickDetect = Instance.new("TextButton")
 		ClickDetect.Name = "ClickDetect"
 		ClickDetect.Size = UDim2.new(1, 0, 1, 0)
@@ -404,12 +422,15 @@ function SKUI:CreateWindow(config)
 			MainFrame.Visible = not MainFrame.Visible
 		end)
 
-		makeDraggable(FloatingBtn, ClickDetect)
+		-- Apply Advanced Draggable Engine to Minimize Button (DRAGGABLE TRUE)
+		makeElementDraggable(FloatingBtn, ClickDetect)
 
 		return FloatingBtn
 	end
 
-	-- Search System Engine
+	-- ==========================================
+	-- REAL-TIME SEARCH ENGINE
+	-- ==========================================
 	local function updateSearch(query)
 		windowObject.SearchQuery = query:lower()
 		for _, groupbox in ipairs(windowObject.ActiveGroupboxes) do
@@ -422,6 +443,7 @@ function SKUI:CreateWindow(config)
 					element.Frame.Visible = false
 				end
 			end
+			-- Collapse empty group boxes during query matching
 			groupbox.Frame.Visible = (visibleElements > 0)
 		end
 	end
@@ -430,7 +452,9 @@ function SKUI:CreateWindow(config)
 		updateSearch(SearchBox.Text)
 	end)
 
-	-- Tab Creator
+	-- ==========================================
+	-- TAB MANAGEMENT CREATOR
+	-- ==========================================
 	function windowObject:CreateTab(tabName)
 		local TabBtn = Instance.new("TextButton")
 		TabBtn.Name = tabName .. "_Tab"
@@ -496,7 +520,9 @@ function SKUI:CreateWindow(config)
 
 		table.insert(windowObject.Tabs, tabObject)
 
-		-- Groupbox Creator
+		-- ==========================================
+		-- GROUPBOX COMPONENT CONTAINER
+		-- ==========================================
 		function tabObject:CreateGroupbox(groupName)
 			local GroupFrame = Instance.new("Frame")
 			GroupFrame.Name = groupName .. "_Group"
@@ -700,6 +726,7 @@ function SKUI:CreateWindow(config)
 					end
 				end
 
+				-- Assign to Global backup to handle call setups without direct declarations
 				_G.LastCreatedDropdown = dropdownInstance
 
 				table.insert(groupboxObject.Elements, {Title = dTitle, Frame = DropdownFrame})
@@ -966,7 +993,7 @@ function SKUI:CreateWindow(config)
 				resizeGroup()
 			end
 
-			-- Dynamic Fallback for Dropdown Refresh matching your usage
+			-- Dynamic Fallback Metatable for non-assigned dropdown execution updates
 			local oldIndex = groupboxObject.__index
 			setmetatable(groupboxObject, {
 				__index = function(tbl, key)
@@ -984,7 +1011,7 @@ function SKUI:CreateWindow(config)
 			return groupboxObject
 		end
 
-		-- Dynamic Fallback for variable mismatch (Tab vs MainTab)
+		-- Metatable fallbacks supporting mismatched syntax variables (e.g., using Tab vs MainTab)
 		local oldTabIndex = tabObject.__index
 		setmetatable(tabObject, {
 			__index = function(tbl, key)
