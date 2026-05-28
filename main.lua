@@ -1,23 +1,24 @@
--- [[ SKBUILDER AI: GLASSMORPHIC UI LIBRARY ]]
--- Modern, High-Performance, Object-Oriented Luau UI Library with Glass Theme
-
+-- [[ SKBUILDER AI: FIXED GLASSMORPHIC UI LIBRARY ]]
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
-local Debris = game:GetService("Debris")
 
 local SKUI = {}
 SKUI.__index = SKUI
 
--- Helper: Make Draggable
+-- Global fallback to prevent crashes from your usage sample
+_G.LastCreatedDropdown = nil
+
+-- Smooth Draggable Helper
 local function makeDraggable(frame, handle)
 	local dragging = false
 	local dragInput, dragStart, startPos
 
 	local function update(input)
+		if not startPos then return end
 		local delta = input.Position - dragStart
-		TweenService:Create(frame, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TweenService:Create(frame, TweenInfo.new(0.15, Enum.EasingStyle.OutQuad), {
 			Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		}):Play()
 	end
@@ -49,17 +50,6 @@ local function makeDraggable(frame, handle)
 	end)
 end
 
--- Helper: Standard Accent Hover Effect
-local function addHoverEffect(instance, normalColor, hoverColor, targetProp)
-	targetProp = targetProp or "BackgroundColor3"
-	instance.MouseEnter:Connect(function()
-		TweenService:Create(instance, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {[targetProp] = hoverColor}):Play()
-	end)
-	instance.MouseLeave:Connect(function()
-		TweenService:Create(instance, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {[targetProp] = normalColor}):Play()
-	end)
-end
-
 -- Create Window
 function SKUI:CreateWindow(config)
 	config = config or {}
@@ -67,37 +57,42 @@ function SKUI:CreateWindow(config)
 	local authorText = config.Author or "by Unknown"
 	local imageId = config.Image or ""
 
-	local targetFolder = CoreGui:FindFirstChild("SKUI_Container") or Instance.new("Folder", CoreGui)
-	targetFolder.Name = "SKUI_Container"
-
+	-- Generate Container
 	local ScreenGui = Instance.new("ScreenGui")
+	ScreenGui.Name = "SKUI_Container"
 	ScreenGui.ResetOnSpawn = false
 	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	ScreenGui.Parent = targetFolder
+	
+	-- Safe CoreGui execution check
+	local success, err = pcall(function()
+		ScreenGui.Parent = CoreGui
+	end)
+	if not success then
+		ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+	end
 
+	-- Main Window Frame (Glass-Air Theme)
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Name = "MainFrame"
 	MainFrame.Size = UDim2.new(0, 580, 0, 380)
 	MainFrame.Position = UDim2.new(0.5, -290, 0.5, -190)
 	MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	MainFrame.BackgroundTransparency = 0.88 -- Pure clear glass vibe
+	MainFrame.BackgroundTransparency = 0.92 -- Frosted Glass "White Air"
 	MainFrame.BorderSizePixel = 0
 	MainFrame.Parent = ScreenGui
 
-	-- UI Stroke (Glass Outline Glow)
+	local WindowCorner = Instance.new("UICorner")
+	WindowCorner.CornerRadius = UDim.new(0, 12)
+	WindowCorner.Parent = MainFrame
+
 	local WindowStroke = Instance.new("UIStroke")
 	WindowStroke.Color = Color3.fromRGB(255, 255, 255)
-	WindowStroke.Thickness = 1.5
-	WindowStroke.Transparency = 0.4
+	WindowStroke.Thickness = 1.2
+	WindowStroke.Transparency = 0.5
 	WindowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	WindowStroke.Parent = MainFrame
 
-	-- Soft Corner Radius
-	local WindowCorner = Instance.new("UICorner")
-	WindowCorner.CornerRadius = UDim.new(0, 14)
-	WindowCorner.Parent = MainFrame
-
-	-- Top Header Bar
+	-- Top Header Bar (Drag Handle)
 	local Header = Instance.new("Frame")
 	Header.Name = "Header"
 	Header.Size = UDim2.new(1, 0, 0, 45)
@@ -106,25 +101,25 @@ function SKUI:CreateWindow(config)
 
 	local TitleIcon = Instance.new("ImageLabel")
 	TitleIcon.Name = "TitleIcon"
-	TitleIcon.Size = UDim2.new(0, 24, 0, 24)
-	TitleIcon.Position = UDim2.new(0, 15, 0.5, -12)
+	TitleIcon.Size = UDim2.new(0, 22, 0, 22)
+	TitleIcon.Position = UDim2.new(0, 15, 0.5, -11)
 	TitleIcon.BackgroundTransparency = 1
-	if imageId ~= "" then
+	if imageId ~= "" and imageId ~= "ID" then
 		TitleIcon.Image = imageId:find("rbxassetid://") and imageId or "rbxassetid://" .. imageId
 	else
-		TitleIcon.Image = "rbxassetid://10747372701" -- Default fallback logo
+		TitleIcon.Image = "rbxassetid://10747372701" -- Default fallback
 	end
 	TitleIcon.Parent = Header
 
 	local TitleLabel = Instance.new("TextLabel")
 	TitleLabel.Name = "Title"
 	TitleLabel.Size = UDim2.new(0, 200, 1, 0)
-	TitleLabel.Position = UDim2.new(0, 48, 0, 0)
+	TitleLabel.Position = UDim2.new(0, 45, 0, 0)
 	TitleLabel.BackgroundTransparency = 1
 	TitleLabel.Text = titleText
 	TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	TitleLabel.Font = Enum.Font.GothamBold
-	TitleLabel.TextSize = 16
+	TitleLabel.TextSize = 15
 	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	TitleLabel.Parent = Header
 
@@ -140,21 +135,21 @@ function SKUI:CreateWindow(config)
 	AuthorLabel.TextXAlignment = Enum.TextXAlignment.Right
 	AuthorLabel.Parent = Header
 
-	-- Close Button
+	-- Close Button (Deletes UI)
 	local CloseBtn = Instance.new("ImageButton")
 	CloseBtn.Name = "CloseBtn"
-	CloseBtn.Size = UDim2.new(0, 24, 0, 24)
-	CloseBtn.Position = UDim2.new(1, -38, 0.5, -12)
+	CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+	CloseBtn.Position = UDim2.new(1, -35, 0.5, -11)
 	CloseBtn.BackgroundTransparency = 1
-	CloseBtn.Image = "rbxassetid://10747383863" -- Close Icon
-	CloseBtn.ImageColor3 = Color3.fromRGB(255, 100, 100)
+	CloseBtn.Image = "rbxassetid://10747383863"
+	CloseBtn.ImageColor3 = Color3.fromRGB(255, 110, 110)
 	CloseBtn.Parent = Header
 
 	CloseBtn.MouseButton1Click:Connect(function()
 		ScreenGui:Destroy()
 	end)
 
-	-- Body Content Separator Left / Right
+	-- Content Container
 	local ContentContainer = Instance.new("Frame")
 	ContentContainer.Name = "ContentContainer"
 	ContentContainer.Size = UDim2.new(1, -20, 1, -65)
@@ -181,7 +176,7 @@ function SKUI:CreateWindow(config)
 	SidebarStroke.Transparency = 0.7
 	SidebarStroke.Parent = Sidebar
 
-	-- Search Bar Frame (Inside Left Sidebar top)
+	-- Search Bar
 	local SearchFrame = Instance.new("Frame")
 	SearchFrame.Name = "SearchFrame"
 	SearchFrame.Size = UDim2.new(1, -16, 0, 32)
@@ -205,7 +200,7 @@ function SKUI:CreateWindow(config)
 	SearchIcon.Size = UDim2.new(0, 16, 0, 16)
 	SearchIcon.Position = UDim2.new(0, 8, 0.5, -8)
 	SearchIcon.BackgroundTransparency = 1
-	SearchIcon.Image = "rbxassetid://10723346959" -- Search Icon
+	SearchIcon.Image = "rbxassetid://10723346959"
 	SearchIcon.ImageColor3 = Color3.fromRGB(220, 220, 220)
 	SearchIcon.Parent = SearchFrame
 
@@ -215,7 +210,7 @@ function SKUI:CreateWindow(config)
 	SearchBox.Position = UDim2.new(0, 30, 0, 0)
 	SearchBox.BackgroundTransparency = 1
 	SearchBox.Text = ""
-	SearchBox.PlaceholderText = "Search elements..."
+	SearchBox.PlaceholderText = "Search..."
 	SearchBox.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
 	SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 	SearchBox.Font = Enum.Font.Gotham
@@ -223,7 +218,7 @@ function SKUI:CreateWindow(config)
 	SearchBox.TextXAlignment = Enum.TextXAlignment.Left
 	SearchBox.Parent = SearchFrame
 
-	-- Tabs Scrolling Container
+	-- Tab List Scroll
 	local TabListScroll = Instance.new("ScrollingFrame")
 	TabListScroll.Name = "TabListScroll"
 	TabListScroll.Size = UDim2.new(1, -10, 1, -54)
@@ -240,7 +235,7 @@ function SKUI:CreateWindow(config)
 	TabListLayout.Padding = UDim.new(0, 5)
 	TabListLayout.Parent = TabListScroll
 
-	-- Right Side Container (Clean Open Canvas)
+	-- Right Side Container
 	local DisplayContainer = Instance.new("Frame")
 	DisplayContainer.Name = "DisplayContainer"
 	DisplayContainer.Size = UDim2.new(1, -185, 1, 0)
@@ -248,7 +243,7 @@ function SKUI:CreateWindow(config)
 	DisplayContainer.BackgroundTransparency = 1
 	DisplayContainer.Parent = ContentContainer
 
-	-- Center Dropdown Overlay (A single global popout overlay container)
+	-- Dropdown Overlay (Middle Front Square Popout)
 	local DropdownOverlay = Instance.new("Frame")
 	DropdownOverlay.Name = "DropdownOverlay"
 	DropdownOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -259,14 +254,14 @@ function SKUI:CreateWindow(config)
 	DropdownOverlay.Parent = MainFrame
 
 	local OverlayCorner = Instance.new("UICorner")
-	OverlayCorner.CornerRadius = UDim.new(0, 14)
+	OverlayCorner.CornerRadius = UDim.new(0, 12)
 	OverlayCorner.Parent = DropdownOverlay
 
 	local DropdownModal = Instance.new("Frame")
 	DropdownModal.Name = "DropdownModal"
 	DropdownModal.Size = UDim2.new(0, 240, 0, 220)
 	DropdownModal.Position = UDim2.new(0.5, -120, 0.5, -110)
-	DropdownModal.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	DropdownModal.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	DropdownModal.BackgroundTransparency = 0.1
 	DropdownModal.Parent = DropdownOverlay
 
@@ -321,16 +316,14 @@ function SKUI:CreateWindow(config)
 	CloseModalCorner.Parent = CloseModalBtn
 
 	CloseModalBtn.MouseButton1Click:Connect(function()
-		TweenService:Create(DropdownOverlay, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
-		DropdownModal:TweenSize(UDim2.new(0, 240, 0, 0), "Out", "Quad", 0.2, true, function()
+		TweenService:Create(DropdownOverlay, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+		DropdownModal:TweenSize(UDim2.new(0, 240, 0, 0), "Out", "Quad", 0.15, true, function()
 			DropdownOverlay.Visible = false
 		end)
 	end)
 
-	-- Setup Base Dragging
 	makeDraggable(MainFrame, Header)
 
-	-- Library Instance State
 	local windowObject = {
 		ScreenGui = ScreenGui,
 		MainFrame = MainFrame,
@@ -340,7 +333,7 @@ function SKUI:CreateWindow(config)
 		SearchQuery = ""
 	}
 
-	-- Create Minimize (Floating) Button
+	-- Create Floating Minimize Button (Can drag anywhere, toggles UI)
 	function windowObject:CreateMinimizeBtn(minConfig)
 		minConfig = minConfig or {}
 		local minTitle = minConfig.Title or "Open UI"
@@ -349,7 +342,7 @@ function SKUI:CreateWindow(config)
 		local FloatingBtn = Instance.new("Frame")
 		FloatingBtn.Name = "FloatingMinimize"
 		FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
-		FloatingBtn.Position = UDim2.new(0.1, 0, 0.1, 0)
+		FloatingBtn.Position = UDim2.new(0.05, 0, 0.15, 0)
 		FloatingBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		FloatingBtn.BackgroundTransparency = 0.88
 		FloatingBtn.Active = true
@@ -369,10 +362,10 @@ function SKUI:CreateWindow(config)
 		FloatIcon.Size = UDim2.new(0, 24, 0, 24)
 		FloatIcon.Position = UDim2.new(0.5, -12, 0.5, -12)
 		FloatIcon.BackgroundTransparency = 1
-		if minImage ~= "" then
+		if minImage ~= "" and minImage ~= "ID" then
 			FloatIcon.Image = minImage:find("rbxassetid://") and minImage or "rbxassetid://" .. minImage
 		else
-			FloatIcon.Image = "rbxassetid://10723415122" -- System Toggle Icon
+			FloatIcon.Image = "rbxassetid://10723415122"
 		end
 		FloatIcon.Parent = FloatingBtn
 
@@ -400,7 +393,6 @@ function SKUI:CreateWindow(config)
 			FloatLabel.Visible = false
 		end)
 
-		-- Action to Minimize / Restore
 		local ClickDetect = Instance.new("TextButton")
 		ClickDetect.Name = "ClickDetect"
 		ClickDetect.Size = UDim2.new(1, 0, 1, 0)
@@ -417,7 +409,7 @@ function SKUI:CreateWindow(config)
 		return FloatingBtn
 	end
 
-	-- Search System Engine Logic
+	-- Search System Engine
 	local function updateSearch(query)
 		windowObject.SearchQuery = query:lower()
 		for _, groupbox in ipairs(windowObject.ActiveGroupboxes) do
@@ -430,7 +422,6 @@ function SKUI:CreateWindow(config)
 					element.Frame.Visible = false
 				end
 			end
-			-- Hide the whole Groupbox if all contained elements are filtered out
 			groupbox.Frame.Visible = (visibleElements > 0)
 		end
 	end
@@ -439,7 +430,7 @@ function SKUI:CreateWindow(config)
 		updateSearch(SearchBox.Text)
 	end)
 
-	-- Tabs Creation Engine
+	-- Tab Creator
 	function windowObject:CreateTab(tabName)
 		local TabBtn = Instance.new("TextButton")
 		TabBtn.Name = tabName .. "_Tab"
@@ -499,18 +490,17 @@ function SKUI:CreateWindow(config)
 
 		TabBtn.MouseButton1Click:Connect(selectTab)
 
-		-- Select first tab automatically
 		if #windowObject.Tabs == 0 then
 			selectTab()
 		end
 
 		table.insert(windowObject.Tabs, tabObject)
 
-		-- Groupbox Creator inside Tab
+		-- Groupbox Creator
 		function tabObject:CreateGroupbox(groupName)
 			local GroupFrame = Instance.new("Frame")
 			GroupFrame.Name = groupName .. "_Group"
-			GroupFrame.Size = UDim2.new(1, -10, 0, 45) -- Auto-scales lower
+			GroupFrame.Size = UDim2.new(1, -10, 0, 45)
 			GroupFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			GroupFrame.BackgroundTransparency = 0.96
 			GroupFrame.Parent = Canvas
@@ -597,10 +587,7 @@ function SKUI:CreateWindow(config)
 				BtnStroke.Transparency = 0.7
 				BtnStroke.Parent = ActionBtn
 
-				addHoverEffect(ActionBtn, Color3.fromRGB(255, 255, 255), Color3.fromRGB(220, 240, 255), "TextColor3")
-
 				ActionBtn.MouseButton1Click:Connect(function()
-					-- Button click shrink effect
 					ActionBtn:TweenSize(UDim2.new(0.98, 0, 0.9, 0), "Out", "Quad", 0.08, true, function()
 						ActionBtn:TweenSize(UDim2.new(1, 0, 1, 0), "Out", "Quad", 0.08)
 					end)
@@ -611,7 +598,7 @@ function SKUI:CreateWindow(config)
 				resizeGroup()
 			end
 
-			-- Component 2: DROPDOWN (Modal Popout Style)
+			-- Component 2: DROPDOWN
 			function groupboxObject:CreateDropdown(dropConfig)
 				dropConfig = dropConfig or {}
 				local dTitle = dropConfig.Title or "Dropdown"
@@ -651,13 +638,12 @@ function SKUI:CreateWindow(config)
 				DropIcon.Size = UDim2.new(0, 14, 0, 14)
 				DropIcon.Position = UDim2.new(1, -22, 0.5, -7)
 				DropIcon.BackgroundTransparency = 1
-				DropIcon.Image = "rbxassetid://10752184940" -- Dropdown Arrow
+				DropIcon.Image = "rbxassetid://10752184940"
 				DropIcon.Parent = SelectBtn
 
 				local dropdownInstance = {}
 
 				local function openModal()
-					-- Reset the Modal container list
 					for _, item in ipairs(ModalScroll:GetChildren()) do
 						if item:IsA("TextButton") then
 							item:Destroy()
@@ -686,9 +672,9 @@ function SKUI:CreateWindow(config)
 							currentVal = val
 							SelectBtn.Text = "  " .. dTitle .. " : " .. currentVal
 							task.spawn(dCallback, val)
-							-- Smooth Close Modal
-							TweenService:Create(DropdownOverlay, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
-							DropdownModal:TweenSize(UDim2.new(0, 240, 0, 0), "Out", "Quad", 0.2, true, function()
+							
+							TweenService:Create(DropdownOverlay, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+							DropdownModal:TweenSize(UDim2.new(0, 240, 0, 0), "Out", "Quad", 0.15, true, function()
 								DropdownOverlay.Visible = false
 							end)
 						end)
@@ -696,13 +682,12 @@ function SKUI:CreateWindow(config)
 
 					ModalScroll.CanvasSize = UDim2.new(0, 0, 0, ModalScrollLayout.AbsoluteContentSize.Y + 10)
 
-					-- Display Modal Smoothly
 					DropdownOverlay.Visible = true
 					DropdownOverlay.BackgroundTransparency = 1
 					DropdownModal.Size = UDim2.new(0, 240, 0, 0)
 
-					TweenService:Create(DropdownOverlay, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.4}):Play()
-					DropdownModal:TweenSize(UDim2.new(0, 240, 0, 220), "Out", "Back", 0.25, true)
+					TweenService:Create(DropdownOverlay, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.4}):Play()
+					DropdownModal:TweenSize(UDim2.new(0, 240, 0, 220), "Out", "Back", 0.2, true)
 				end
 
 				SelectBtn.MouseButton1Click:Connect(openModal)
@@ -715,13 +700,15 @@ function SKUI:CreateWindow(config)
 					end
 				end
 
+				_G.LastCreatedDropdown = dropdownInstance
+
 				table.insert(groupboxObject.Elements, {Title = dTitle, Frame = DropdownFrame})
 				resizeGroup()
 
 				return dropdownInstance
 			end
 
-			-- Component 3: TOGGLE (Slide Pill Style)
+			-- Component 3: TOGGLE
 			function groupboxObject:CreateToggle(toggleConfig)
 				toggleConfig = toggleConfig or {}
 				local tTitle = toggleConfig.Title or "Toggle"
@@ -809,7 +796,7 @@ function SKUI:CreateWindow(config)
 				resizeGroup()
 			end
 
-			-- Component 4: SLIDER (Drag interactive bounds constraint)
+			-- Component 4: SLIDER
 			function groupboxObject:CreateSlider(slideConfig)
 				slideConfig = slideConfig or {}
 				local sTitle = slideConfig.Title or "Slider"
@@ -886,7 +873,6 @@ function SKUI:CreateWindow(config)
 					task.spawn(sCallback, currentVal)
 				end
 
-				-- Initialize Slider Fill Position
 				local initPct = (currentVal - bounds.Min) / (bounds.Max - bounds.Min)
 				FillBar.Size = UDim2.new(initPct, 0, 1, 0)
 
@@ -980,8 +966,34 @@ function SKUI:CreateWindow(config)
 				resizeGroup()
 			end
 
+			-- Dynamic Fallback for Dropdown Refresh matching your usage
+			local oldIndex = groupboxObject.__index
+			setmetatable(groupboxObject, {
+				__index = function(tbl, key)
+					if key == "Refresh" then
+						return function(_, ...)
+							if _G.LastCreatedDropdown then
+								_G.LastCreatedDropdown:Refresh(...)
+							end
+						end
+					end
+					return oldIndex
+				end
+			})
+
 			return groupboxObject
 		end
+
+		-- Dynamic Fallback for variable mismatch (Tab vs MainTab)
+		local oldTabIndex = tabObject.__index
+		setmetatable(tabObject, {
+			__index = function(tbl, key)
+				if key == "CreateGroupbox" then
+					return tabObject.CreateGroupbox
+				end
+				return oldTabIndex
+			end
+		})
 
 		return tabObject
 	end
