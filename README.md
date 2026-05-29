@@ -1,9 +1,9 @@
 # **LibraryGlass UI**
 
-local SKUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha10000-oss/SKUI/refs/heads/main/main.lua", true))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/sokpanha10000-oss/SKUI/refs/heads/main/main.lua", true))()
 
 
-local Window = SKUI:CreateWindow({
+local Window = Library:CreateWindow({
     Title  = "My Super Hub",
     Image  = "rbxassetid://YOUR_IMAGE_ID",   -- optional logo
     Author = "by .ftgs and .ftgs",            -- optional author line
