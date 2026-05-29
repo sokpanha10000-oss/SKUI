@@ -21,36 +21,38 @@ local PlayerGui         = LocalPlayer:WaitForChild("PlayerGui")
 --  Constants / Palette
 -- ──────────────────────────────────────────────────────────────
 local C = {
-    -- Glass surfaces
+    -- Glass surfaces (outer window stays glass/white-air)
     GlassBG         = Color3.fromRGB(255, 255, 255),
-    GlassAlpha      = 0.12,      -- main window transparency
+    GlassAlpha      = 0.09,      -- main window transparency
     FrameBG         = Color3.fromRGB(255, 255, 255),
-    FrameAlpha      = 0.10,
+    FrameAlpha      = 0.09,
 
     -- Accents
-    Accent          = Color3.fromRGB(120, 180, 255),
-    AccentHover     = Color3.fromRGB(160, 210, 255),
-    TabActive       = Color3.fromRGB(255, 255, 255),
-    TabInactive     = Color3.fromRGB(200, 210, 230),
+    Accent          = Color3.fromRGB(74,  143, 255),
+    AccentHover     = Color3.fromRGB(125, 180, 255),
+    TabActive       = Color3.fromRGB(74,  143, 255),
+    TabInactive     = Color3.fromRGB(160, 190, 235),
 
     -- Text
-    TextPrimary     = Color3.fromRGB(255, 255, 255),
-    TextSecondary   = Color3.fromRGB(200, 215, 235),
-    TextDark        = Color3.fromRGB(30,  40,  60),
+    TextPrimary     = Color3.fromRGB(210, 225, 255),
+    TextSecondary   = Color3.fromRGB(130, 155, 210),
+    TextDark        = Color3.fromRGB(20,  28,  55),
 
-    -- Elements
-    ElementBG       = Color3.fromRGB(255, 255, 255),
-    ElementAlpha    = 0.08,
-    SliderFill      = Color3.fromRGB(120, 180, 255),
-    ToggleOn        = Color3.fromRGB(100, 220, 160),
-    ToggleOff       = Color3.fromRGB(180, 180, 200),
-    InputBG         = Color3.fromRGB(20,  30,  55),
-    DropdownBG      = Color3.fromRGB(25,  35,  65),
+    -- Elements — deep dark panels
+    ElementBG       = Color3.fromRGB(8,   12,  28),   -- dark element rows
+    ElementAlpha    = 0.25,                            -- semi-opaque dark
+    TabBG           = Color3.fromRGB(8,   12,  30),   -- dark tab frame
+    TabAlpha        = 0.18,
+    SliderFill      = Color3.fromRGB(58,  122, 239),
+    ToggleOn        = Color3.fromRGB(40,  220, 120),
+    ToggleOff       = Color3.fromRGB(30,  35,  60),
+    InputBG         = Color3.fromRGB(4,   7,   20),
+    DropdownBG      = Color3.fromRGB(6,   9,   22),   -- very dark dropdown
 
     -- Borders / Shadows
     Border          = Color3.fromRGB(255, 255, 255),
-    BorderAlpha     = 0.25,
-    Shadow          = Color3.fromRGB(0,   10,  40),
+    BorderAlpha     = 0.30,
+    Shadow          = Color3.fromRGB(0,   5,   20),
 }
 
 local FONT        = Enum.Font.GothamBold
