@@ -1,4 +1,4 @@
--- [[ Premium Roblox Executor GUI Master Suite ]] --
+-- [[ Ultimate Premium Roblox Executor Suite - Stability Patch ]] --
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
@@ -9,10 +9,11 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local Camera = workspace.CurrentCamera
 
--- Create ScreenGui (Protected under CoreGui for executors)
+-- Create ScreenGui (Protected under CoreGui with high DisplayOrder)
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PremiumAimbotSuite"
+ScreenGui.Name = "PremiumAimbotSuite_Fixed"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999999
 pcall(function()
     ScreenGui.Parent = CoreGui
 end)
@@ -20,7 +21,7 @@ if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Comprehensive Feature Configurations
+-- Feature Configurations
 local AimbotSettings = {
     CircleActive = false,
     CircleSize = 100,
@@ -37,26 +38,28 @@ local AimbotSettings = {
 local IsClicking = false
 local SecretKey = "AIMBOTPREMIUM"
 
--- FOV Circle Drawing Setup
+-- Safe FOV Drawing Initialization
 local FOVCircle = nil
-if drawing or Drawing then
-    FOVCircle = (drawing or Drawing).new("Circle")
-    FOVCircle.Visible = false
-    FOVCircle.Color = Color3.fromRGB(255, 0, 0)
-    FOVCircle.Thickness = 1
-    FOVCircle.NumSides = 64
-    FOVCircle.Radius = AimbotSettings.CircleSize
-    FOVCircle.Filled = false
-end
+pcall(function()
+    if drawing or Drawing then
+        FOVCircle = (drawing or Drawing).new("Circle")
+        FOVCircle.Visible = false
+        FOVCircle.Color = Color3.fromRGB(255, 0, 0)
+        FOVCircle.Thickness = 1.5
+        FOVCircle.NumSides = 64
+        FOVCircle.Radius = AimbotSettings.CircleSize
+        FOVCircle.Filled = false
+    end
+end)
 
 ----------------------------------------------------------------
--- BACKEND BEHAVIOR MODIFICATION ENGINES
+-- BACKEND SYSTEMS & TARGET ACQUISITION
 ----------------------------------------------------------------
 
--- Smart Proximity Target Fetcher
+-- Targets whoever is closest to the absolute middle of your screen crosshair
 local function GetClosestPlayerToCenter()
     local ClosestTarget = nil
-    local Closest3DDistance = math.huge
+    local MaxDistance = AimbotSettings.CircleSize
     local ScreenCenter = Camera.ViewportSize / 2
 
     for _, player in ipairs(Players:GetPlayers()) do
@@ -65,13 +68,13 @@ local function GetClosestPlayerToCenter()
             if Hum and Hum.Health > 0 then
                 local ScreenPos, OnScreen = Camera:WorldToViewportPoint(player.Character.Head.Position)
                 if OnScreen then
+                    -- Calculate 2D displacement from crosshair
                     local FOVDistance = (Vector2.new(ScreenPos.X, ScreenPos.Y) - ScreenCenter).Magnitude
-                    if FOVDistance < AimbotSettings.CircleSize then
-                        local Target3DDistance = (player.Character.Head.Position - Camera.CFrame.Position).Magnitude
-                        if Target3DDistance < Closest3DDistance then
-                            Closest3DDistance = Target3DDistance
-                            ClosestTarget = player.Character.Head
-                        end
+                    
+                    -- Dynamic Swap: If anyone runs closer to your crosshair center, instantly swap targets
+                    if FOVDistance < MaxDistance then
+                        MaxDistance = FOVDistance
+                        ClosestTarget = player.Character.Head
                     end
                 end
             end
@@ -80,25 +83,27 @@ local function GetClosestPlayerToCenter()
     return ClosestTarget
 end
 
--- Core Render Loop Handling
+-- Core Render Loop
 RunService.RenderStepped:Connect(function()
-    if FOVCircle then
-        FOVCircle.Position = Camera.ViewportSize / 2
-    end
-
-    if AimbotSettings.CameraAimActive and IsClicking then
-        local Target = GetClosestPlayerToCenter()
-        if Target then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Position)
+    pcall(function()
+        if FOVCircle then
+            FOVCircle.Position = Camera.ViewportSize / 2
         end
-    end
+
+        if AimbotSettings.CameraAimActive and IsClicking then
+            local Target = GetClosestPlayerToCenter()
+            if Target then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Position)
+            end
+        end
+    end)
 end)
 
--- Main Modification Processing Loop (ESP, Hitbox, GodMode Loops combined)
+-- Main Modification Processing Loop
 task.spawn(function()
-    while task.wait(0.4) do
+    while task.wait(0.3) do
         pcall(function()
-            -- Manage Godmode Hooks
+            -- Godmode State Handler
             if AimbotSettings.GodModeActive and LocalPlayer.Character then
                 local Hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
                 if Hum then
@@ -108,7 +113,7 @@ task.spawn(function()
                 end
             end
 
-            -- Manage Player Attributes (Speed & Jump Loop Safety)
+            -- Character Stats Enforcement
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
                 local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
                 if hum.WalkSpeed ~= AimbotSettings.Speed then hum.WalkSpeed = AimbotSettings.Speed end
@@ -120,10 +125,10 @@ task.spawn(function()
                 end
             end
 
-            -- Process Opponents (ESP & Hitboxes)
+            -- Loop Through Enemies for ESP & Hitboxes
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
-                    -- Process ESP Highlights
+                    -- ESP Updates
                     local Highlight = player.Character:FindFirstChild("SuiteHighlight")
                     if AimbotSettings.ESPActive then
                         if not Highlight then
@@ -138,7 +143,7 @@ task.spawn(function()
                         if Highlight then Highlight:Destroy() end
                     end
 
-                    -- Process Hitbox Scaling
+                    -- Hitbox Expander Updates
                     local HRP = player.Character:FindFirstChild("HumanoidRootPart")
                     if HRP then
                         if AimbotSettings.HitboxActive then
@@ -157,7 +162,7 @@ task.spawn(function()
     end
 end)
 
--- Fire Detection Inputs
+-- Universal Input Handlers
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -171,7 +176,7 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- Window Dragging Handler Engine
+-- Smooth Mouse Dragging Engine
 local function MakeDraggable(frame, dragHandle)
     local dragging = false
     local startPos, dragStart
@@ -200,10 +205,10 @@ local function MakeDraggable(frame, dragHandle)
 end
 
 ----------------------------------------------------------------
--- INTERFACE FRAME COMPOSITION
+-- UI DESIGN FRAMEWORK
 ----------------------------------------------------------------
 
--- Floating Trigger Node
+-- Floating Main Toggle Button
 local FloatingButton = Instance.new("TextButton")
 FloatingButton.Name = "FloatingToggle"
 FloatingButton.Size = UDim2.new(0, 60, 0, 60)
@@ -213,6 +218,7 @@ FloatingButton.Text = "MENU"
 FloatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatingButton.Font = Enum.Font.SourceSansBold
 FloatingButton.TextSize = 14
+FloatingButton.Active = true
 FloatingButton.Parent = ScreenGui
 Instance.new("UICorner", FloatingButton).CornerRadius = UDim.new(0, 12)
 local FloatStroke = Instance.new("UIStroke", FloatingButton)
@@ -221,26 +227,29 @@ FloatStroke.Thickness = 1.5
 
 MakeDraggable(FloatingButton, FloatingButton)
 
--- Main Content Window Panel
+-- Main Control Frame
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 340, 0, 430)
 MainFrame.Position = UDim2.new(0.5, -170, 0.5, -215)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.Visible = false
+MainFrame.Active = true
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
+-- Title Header Bar
 local TitleBar = Instance.new("Frame")
 TitleBar.Name = "TitleBar"
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+TitleBar.Active = true
 TitleBar.Parent = MainFrame
 Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
 
 local TitleText = Instance.new("TextLabel")
-TitleText.Size = UDim2.new(1, -20, 1, 0)
+TitleText.Size = UDim2.new(1, -60, 1, 0)
 TitleText.Position = UDim2.new(0, 15, 0, 0)
 TitleText.BackgroundTransparency = 1
 TitleText.Text = "PREMIUM SYSTEM PANEL"
@@ -250,15 +259,25 @@ TitleText.TextSize = 15
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.Parent = TitleBar
 
+-- Integrated Title Bar Close Button
+local CloseWindowBtn = Instance.new("TextButton")
+CloseWindowBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseWindowBtn.Position = UDim2.new(1, -35, 0.5, -15)
+CloseWindowBtn.BackgroundTransparency = 1
+CloseWindowBtn.Text = "✕"
+CloseWindowBtn.TextColor3 = Color3.fromRGB(255, 70, 70)
+CloseWindowBtn.Font = Enum.Font.SourceSansBold
+CloseWindowBtn.TextSize = 18
+CloseWindowBtn.Parent = TitleBar
+
 MakeDraggable(MainFrame, TitleBar)
 
--- Scrolling Container Layer for configuration modular blocks
+-- UI Scroll List Frame
 local ContentFrame = Instance.new("ScrollingFrame")
 ContentFrame.Size = UDim2.new(1, -20, 1, -55)
 ContentFrame.Position = UDim2.new(0, 10, 0, 50)
 ContentFrame.BackgroundTransparency = 1
-ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-ContentFrame.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
+ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
 ContentFrame.ScrollBarThickness = 3
 ContentFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 170, 255)
 ContentFrame.Parent = MainFrame
@@ -268,12 +287,21 @@ ListLayout.Padding = UDim.new(0, 10)
 ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ListLayout.Parent = ContentFrame
 
+-- Dynamic Canvas Resizer Link
+ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 20)
+end)
+
+-- Open & Close Window Logic Controls
 FloatingButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
+CloseWindowBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+end)
 
 ----------------------------------------------------------------
--- COMPONENT GENERATOR INTERFACE LOGIC
+-- INTERFACE MODULAR CREATORS
 ----------------------------------------------------------------
 
 local function CreateToggle(text, default, callback)
@@ -310,7 +338,6 @@ local function CreateToggle(text, default, callback)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     local state = default
-    
     local function updateVisuals(targetState)
         TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = targetState and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(50, 50, 60)}):Play()
         TweenService:Create(Indicator, TweenInfo.new(0.2), {Position = targetState and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)}):Play()
@@ -402,7 +429,6 @@ local function CreateSlider(text, min, max, default, callback)
     Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
 
     local Sliding = false
-    
     local function UpdateSlider()
         local relativeX = Mouse.X - SliderTrack.AbsolutePosition.X
         local percentage = math.clamp(relativeX / SliderTrack.AbsoluteSize.X, 0, 1)
@@ -434,7 +460,7 @@ local function CreateSlider(text, min, max, default, callback)
 end
 
 ----------------------------------------------------------------
--- PREMIUM GATE MODAL POPUP DESIGN
+-- SECURITY PORTAL INTERFACE (FIXED CAPTURE BUG)
 ----------------------------------------------------------------
 local KeyModal = Instance.new("Frame")
 KeyModal.Name = "KeyModal"
@@ -442,7 +468,8 @@ KeyModal.Size = UDim2.new(1, 0, 1, -40)
 KeyModal.Position = UDim2.new(0, 0, 1, 0)
 KeyModal.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 KeyModal.BorderSizePixel = 0
-KeyModal.ZIndex = 5
+KeyModal.ZIndex = 10
+KeyModal.Visible = false  -- Instantly prevents clicking hidden nodes
 KeyModal.Parent = MainFrame
 
 local ModalTitle = Instance.new("TextLabel")
@@ -453,7 +480,7 @@ ModalTitle.Text = "ENTER PREMIUM PRODUCT KEY"
 ModalTitle.TextColor3 = Color3.fromRGB(255, 0, 80)
 ModalTitle.Font = Enum.Font.SourceSansBold
 ModalTitle.TextSize = 15
-ModalTitle.ZIndex = 5
+ModalTitle.ZIndex = 11
 ModalTitle.Parent = KeyModal
 
 local KeyTextBox = Instance.new("TextBox")
@@ -465,7 +492,7 @@ KeyTextBox.Text = ""
 KeyTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 KeyTextBox.Font = Enum.Font.SourceSans
 KeyTextBox.TextSize = 14
-KeyTextBox.ZIndex = 5
+KeyTextBox.ZIndex = 11
 KeyTextBox.Parent = KeyModal
 Instance.new("UICorner", KeyTextBox).CornerRadius = UDim.new(0, 6)
 
@@ -477,7 +504,7 @@ KeySubmit.Text = "SUBMIT KEY"
 KeySubmit.TextColor3 = Color3.fromRGB(255, 255, 255)
 KeySubmit.Font = Enum.Font.SourceSansBold
 KeySubmit.TextSize = 14
-KeySubmit.ZIndex = 5
+KeySubmit.ZIndex = 11
 KeySubmit.Parent = KeyModal
 Instance.new("UICorner", KeySubmit).CornerRadius = UDim.new(0, 6)
 
@@ -489,7 +516,7 @@ ModalClose.Text = "Cancel"
 ModalClose.TextColor3 = Color3.fromRGB(150, 150, 150)
 ModalClose.Font = Enum.Font.SourceSans
 ModalClose.TextSize = 13
-ModalClose.ZIndex = 5
+ModalClose.ZIndex = 11
 ModalClose.Parent = KeyModal
 
 local currentToggleFunc = nil
@@ -497,11 +524,14 @@ local currentToggleFunc = nil
 local function PromptKeySystem(onSuccessFunc)
     currentToggleFunc = onSuccessFunc
     KeyTextBox.Text = ""
-    KeyModal:TweenPosition(UDim2.new(0, 0, 0, 40), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.3, true)
+    KeyModal.Visible = true
+    KeyModal:TweenPosition(UDim2.new(0, 0, 0, 40), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 end
 
 local function CloseKeySystem()
-    KeyModal:TweenPosition(UDim2.new(0, 0, 1, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quart, 0.3, true)
+    KeyModal:TweenPosition(UDim2.new(0, 0, 1, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quart, 0.25, true, function()
+        KeyModal.Visible = false
+    end)
 end
 
 KeySubmit.MouseButton1Click:Connect(function()
@@ -511,8 +541,8 @@ KeySubmit.MouseButton1Click:Connect(function()
         if currentToggleFunc then currentToggleFunc() end
     else
         KeyTextBox.Text = ""
-        KeyTextBox.PlaceholderText = "INVALID KEY CRITICAL"
-        task.wait(1)
+        KeyTextBox.PlaceholderText = "ACCESS DENIED"
+        task.wait(0.8)
         KeyTextBox.PlaceholderText = "Input Key Here..."
     end
 end)
@@ -522,23 +552,23 @@ ModalClose.MouseButton1Click:Connect(function()
 end)
 
 ----------------------------------------------------------------
--- INTERFACE INITIALIZATION EXECUTION
+-- INITIALIZING SYSTEM OBJECTS
 ----------------------------------------------------------------
 
--- Toggle 1: Center FOV Frame
+-- Toggle 1
 CreateToggle("Center FOV Circle Frame", false, function(state, updateVisuals)
     AimbotSettings.CircleActive = state
     if FOVCircle then FOVCircle.Visible = state end
     updateVisuals(state)
 end)
 
--- Toggle 2: Camera Proximity Lock on Click
+-- Toggle 2
 CreateToggle("Camera Lock on Fire Click", false, function(state, updateVisuals)
     AimbotSettings.CameraAimActive = state
     updateVisuals(state)
 end)
 
--- Input 1: Circle Frame Size Config
+-- Input 1
 CreateInput("Circle Frame Size:", "Size", 100, function(value)
     local num = tonumber(value)
     if num then
@@ -547,35 +577,35 @@ CreateInput("Circle Frame Size:", "Size", 100, function(value)
     end
 end)
 
--- Slider 1: Speed Config
+-- Slider 1
 CreateSlider("Character Speed Changer", 0, 300, 16, function(value)
     AimbotSettings.Speed = value
 end)
 
--- Slider 2: Jump Power Config
+-- Slider 2
 CreateSlider("Character Jump Changer", 0, 350, 50, function(value)
     AimbotSettings.Jump = value
 end)
 
--- Toggle 3: Player Silhouette ESP Red
+-- Toggle 3
 CreateToggle("Player ESP (Red Visuals)", false, function(state, updateVisuals)
     AimbotSettings.ESPActive = state
     updateVisuals(state)
 end)
 
--- Toggle 4: Hitbox Optimization Active
+-- Toggle 4
 CreateToggle("Expanded Player Hitbox", false, function(state, updateVisuals)
     AimbotSettings.HitboxActive = state
     updateVisuals(state)
 end)
 
--- Input 2: Hitbox Radius Boundary Allocation
+-- Input 2
 CreateInput("Hitbox Frame Size:", "Dimension", 10, function(value)
     local num = tonumber(value)
     if num then AimbotSettings.HitboxSize = num end
 end)
 
--- Toggle 5: Key Gated Premium Local Godmode
+-- Toggle 5
 CreateToggle("Premium God Mode Engine", false, function(state, updateVisuals)
     if state then
         if AimbotSettings.PremiumUnlocked then
