@@ -1,12 +1,12 @@
 # ✨ Wand UI (Redz Library V5 Remake Mod)
 
 ## 📌 About
-- **Wand UI** is a rebuilt and optimized version of **Redz Library V5**.
+- **Wand UI** is a rebuilt and optimized version of **Redz Library V5 Remake**.
 - It uses the same UI style as the original, with some improvements and refinements.
-- The reason the UI is named **Wand** is that it should be the name of the next generation of **redz Hub** UIs
+- The reason the UI is named **Wand** is that it should be the name of the next generation of **redz Hub or SK Hub** UIs
 
 - 🔹 Made by **Pirath_4 & STEVEKHMER**  
-- 🔹 Designed mainly for use in **Redz Hub** scripts  
+- 🔹 Designed mainly for use in **Redz Hub or SK Hub** scripts  
 - 🔹 Open-Source, Lightweight, and Optimized  
 
 ---
@@ -20,12 +20,12 @@ local Library = loadstring(game:HttpGet("https://github.com/sokpanha10000-oss/SK
 ### Creating a Window
 ```lua
 local Window = Library:MakeWindow({
-    Name           = "Nice Hub : Cool Game",
-    Author         = "dev by real_redz",
-    ScriptFolder   = "redz-library-V5-remake-mod",
-    SearchBar      = true,
-    UserInfoTop    = true,
-    UserInfoTitle  = game:GetService("Players").LocalPlayer.DisplayName,
+    Name = "Nice Hub : Cool Game",
+    Author = "dev by real_redz",
+    ScriptFolder = "redz-library-V5-remake-mod",
+    SearchBar = true,
+    UserInfoTop = true,
+    UserInfoTitle = game:GetService("Players").LocalPlayer.DisplayName,
     UserInfoSubtitle = "Advanced User",
 })
 ```
@@ -172,6 +172,7 @@ Tab:AddSection("Section")
 ```lua
 Tab:AddToggle({
   Name = "Toggle",
+  Type = "Toggle", or [Checkbox]
   Default = false,
   Callback = function(Value)
     
