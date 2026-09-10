@@ -3,7 +3,7 @@
 
 ## Getting Library 
 ```
-local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/FluentPro/Fluent.lua"))()
+loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/1.6.0/Example.lua"))()
 ```
 
 # Save Mangers
@@ -218,50 +218,25 @@ FloatingButtonManager:LoadAutoloadConfig()
 ```
 
 ```
--- FLOATING BUTTON (open/minimize UI) -- optional 
+Minimizer = x:CreateMinimizer({
+    Icon = "rbxassetid://109639117875913",
+    Size = UDim2.fromOffset(64, 64),
+    Position = UDim2.new(0.101969875, 0, 0.110441767, 0),
+    Corner = 12,
+    BackgroundTransparency = 1,
+    IconCorner = 6,
+    Transparency = 0,
+    Lockable = true,
+    LockHoldTime = 1.0,
+    Draggable = true,
+    OnClickSound = {
+        "7127123605", "137566474343039", "438666542",
+        "257001341", "257000833", "7127123554",
+        "131607746976396", "97325669841459", "109312518223078",
+    },
+})
 
-local OpenGui = Instance.new("ScreenGui")
-OpenGui.Name         = "OpenUI"
-OpenGui.ResetOnSpawn = false
-OpenGui.Parent       = game:GetService("CoreGui")
-
-local OpenBtn = Instance.new("ImageButton")
-OpenBtn.Size                   = UDim2.fromOffset(55, 55)
-OpenBtn.Position               = UDim2.new(0.02, 0, 0.85, 0)
-OpenBtn.BackgroundColor3       = Color3.fromRGB(105, 105, 105)
-OpenBtn.BackgroundTransparency = 0
-OpenBtn.Image                  = "rbxassetid://"   -- replace with your icon ID if desired
-OpenBtn.Parent                 = OpenGui
-Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0.2, 0)
-
-FloatingButtonManager:AddButton("OpenBtn", OpenBtn, false, false)
-
--- Dragging logic 
-local _dragActive, _dragStart, _startPos
-OpenBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        _dragActive = true
-        _dragStart  = input.Position
-        _startPos   = OpenBtn.Position
-    end
-end)
-OpenBtn.InputChanged:Connect(function(input)
-    if _dragActive and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - _dragStart
-        OpenBtn.Position = UDim2.new(
-            _startPos.X.Scale, _startPos.X.Offset + delta.X,
-            _startPos.Y.Scale, _startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-game:GetService("UserInputService").InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        _dragActive = false
-    end
-end)
-OpenBtn.MouseButton1Click:Connect(function()
-    if Window and Window.Minimize then Window:Minimize() end
-end)
+Minimizer.Visible = true
 ```
 
 ```
