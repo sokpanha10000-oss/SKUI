@@ -3,7 +3,7 @@
 
 ## Getting Library 
 ```
-loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/1.6.0/Example.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/1.6.0/Example.lua"))()
 ```
 
 # Save Mangers
