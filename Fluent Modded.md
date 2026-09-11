@@ -3,7 +3,7 @@
 
 ## Getting Library 
 ```
-local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/1.6.0/Example.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/1.6.0/main-fix.lua"))()
 ```
 
 # Save Mangers
@@ -218,7 +218,7 @@ FloatingButtonManager:LoadAutoloadConfig()
 ```
 
 ```
-Minimizer = x:CreateMinimizer({
+Minimizer = Fluent:CreateMinimizer({
     Icon = "rbxassetid://109639117875913",
     Size = UDim2.fromOffset(64, 64),
     Position = UDim2.new(0.101969875, 0, 0.110441767, 0),
